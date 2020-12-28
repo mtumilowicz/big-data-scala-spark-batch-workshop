@@ -1,19 +1,23 @@
 package app
 
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{Dataset, SparkSession}
 
 object SimpleApp {
   def main(args: Array[String]) {
-    val logFile = "xxx.txt" // Should be some file on your system
-    val spark = SparkSession.builder
+    val spark = bootstrapSpark()
+    val logFile = "Task1.txt"
+    val logData: Dataset[String] = spark.read.textFile(logFile).cache()
+    val fileAnalysis = new FileAnalysis(logData)
+    val numAs = fileAnalysis.lineContaining("a").count()
+    val numBs = fileAnalysis.lineContaining("b").count()
+    val numCs = fileAnalysis.lineContaining("c").count()
+    println(s"Lines with a: $numAs, Lines with b: $numBs, Lines with b: $numCs")
+    spark.stop()
+  }
+
+  def bootstrapSpark(): SparkSession =
+    SparkSession.builder
       .appName("Simple Application")
       .config("spark.master", "local")
       .getOrCreate()
-    val logData = spark.read.textFile(logFile).cache()
-    val numAs = logData.filter(line => line.contains("a")).count()
-    val numBs = logData.filter(line => line.contains("b")).count()
-    println(s"Lines with a: $numAs, Lines with b: $numBs")
-    println(s"text: $logData")
-    spark.stop()
-  }
 }

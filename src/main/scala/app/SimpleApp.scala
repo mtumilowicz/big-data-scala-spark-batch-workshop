@@ -7,7 +7,7 @@ object SimpleApp {
     val spark = bootstrapSpark()
     val logFile = "Task1.txt"
     val logData: Dataset[String] = spark.read.textFile(logFile).cache()
-    val fileAnalysis = new FileAnalysis(logData)
+    val fileAnalysis = new TextFileAnalysis(logData)
     val numAs = fileAnalysis.lineContaining("a").count()
     val numBs = fileAnalysis.lineContaining("b").count()
     val numCs = fileAnalysis.lineContaining("c").count()
@@ -18,6 +18,6 @@ object SimpleApp {
   def bootstrapSpark(): SparkSession =
     SparkSession.builder
       .appName("Simple Application")
-      .config("spark.master", "local")
+      .master("local")
       .getOrCreate()
 }

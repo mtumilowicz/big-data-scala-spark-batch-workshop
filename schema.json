@@ -1,0 +1,39 @@
+{
+  "type": "struct",
+  "fields": [
+    {
+      "name": "dict",
+      "type": {
+        "type": "struct",
+        "fields": [
+          {
+            "name": "key",
+            "type": "string",
+            "nullable": true,
+            "metadata": {}
+          },
+          {
+            "name": "key2",
+            "type": "string",
+            "nullable": true,
+            "metadata": {}
+          }
+        ]
+      },
+      "nullable": true,
+      "metadata": {}
+    },
+    {
+      "name": "string",
+      "type": "string",
+      "nullable": true,
+      "metadata": {}
+    },
+    {
+      "name": "int",
+      "type": "integer",
+      "nullable": true,
+      "metadata": {}
+    }
+  ]
+}

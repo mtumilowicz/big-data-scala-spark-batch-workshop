@@ -1,7 +1,7 @@
 package app
 
-import org.apache.spark.sql.functions.{col, explode}
-import org.apache.spark.sql.types.{ArrayType, DataType, IntegerType, StringType, StructType}
+import org.apache.spark.sql.functions.col
+import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 object SimpleApp2 {
@@ -24,6 +24,11 @@ object SimpleApp2 {
 
     logData.show()
     logData.printSchema()
+
+    val file = "Task2.csv"
+    val xxx: DataFrame = spark.read.csv(file)
+    xxx.show()
+    xxx.printSchema()
 
     spark.stop()
   }

@@ -9,3 +9,5 @@
 * https://bigdataprogrammers.com/merging-two-dataframes-in-spark/
 * https://mungingdata.com/apache-spark/aggregations/
 * https://spark.apache.org/docs/3.0.0-preview/sql-getting-started.html#running-sql-queries-programmatically
+* https://stackoverflow.com/a/43812193 (for windows)
+* https://sparkbyexamples.com/spark/spark-sql-dataframe-join/

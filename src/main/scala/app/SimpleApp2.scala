@@ -1,6 +1,6 @@
 package app
 
-import org.apache.spark.sql.functions.col
+import org.apache.spark.sql.functions.{col, count}
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
@@ -13,22 +13,31 @@ object SimpleApp2 {
       .add("int", IntegerType)
       .add("array", ArrayType(StringType))
       .add("dict", new StructType().add("key", StringType))
-    val source = scala.io.Source.fromFile("schema.json")
+    val source = scala.io.Source.fromFile("Task2_json_schema.json")
     val lines = try source.getLines.mkString finally source.close()
     val schemaFromJson = DataType.fromJson(lines).asInstanceOf[StructType]
     val logFile = "Task2_xxx"
     var logData: DataFrame = spark.read.schema(schemaFromJson).json(logFile)
     logData = logData
-      .withColumn("xyz", col("dict.key2"))
-      .drop(col("dict"))
+      .withColumn("Zipcode", col("Zipcode.code"))
 
     logData.show()
     logData.printSchema()
 
     val file = "Task2.csv"
-    val xxx: DataFrame = spark.read.csv(file)
+    var xxx: DataFrame = spark.read.option("header", "true").csv(file)
+    xxx = xxx.drop(col("ZipcodeType"))
     xxx.show()
     xxx.printSchema()
+
+    var union = xxx.unionByName(logData)
+    union = union.dropDuplicates("CustomerId")
+    union.show()
+
+    val agg = union.groupBy(col("State"))
+      .agg(count("customerId").alias("customers"))
+
+    agg.show()
 
     spark.stop()
   }

@@ -2,18 +2,18 @@
   "type": "struct",
   "fields": [
     {
-      "name": "dict",
+      "name": "Zipcode",
       "type": {
         "type": "struct",
         "fields": [
           {
-            "name": "key",
+            "name": "Code",
             "type": "string",
             "nullable": true,
             "metadata": {}
           },
           {
-            "name": "key2",
+            "name": "Type",
             "type": "string",
             "nullable": true,
             "metadata": {}
@@ -24,13 +24,19 @@
       "metadata": {}
     },
     {
-      "name": "string",
+      "name": "City",
       "type": "string",
       "nullable": true,
       "metadata": {}
     },
     {
-      "name": "int",
+      "name": "State",
+      "type": "string",
+      "nullable": true,
+      "metadata": {}
+    },
+    {
+      "name": "CustomerId",
       "type": "integer",
       "nullable": true,
       "metadata": {}

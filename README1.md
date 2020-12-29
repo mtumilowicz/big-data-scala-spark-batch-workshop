@@ -5,3 +5,4 @@
 * https://sparkbyexamples.com/spark/spark-schema-explained-with-examples/
 * https://sparkbyexamples.com/spark/spark-read-and-write-json-file/
 * https://bigdataprogrammers.com/merging-two-dataframes-in-spark/
+* https://mungingdata.com/apache-spark/aggregations/

@@ -43,6 +43,8 @@ object SimpleApp2 {
     val sqlDF = spark.sql("SELECT State, COUNT(CustomerId) as Customers FROM people GROUP BY State")
     sqlDF.show()
 
+//    sqlDF.write.parquet("testowy")
+
     spark.stop()
   }
 

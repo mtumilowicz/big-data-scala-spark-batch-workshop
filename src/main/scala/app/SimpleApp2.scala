@@ -35,16 +35,25 @@ object SimpleApp2 {
     union.show()
 
     val agg = union.groupBy(col("State"))
-      .agg(count("customerId").alias("customers"))
+      .agg(count("CustomerId").alias("Customers"))
 
     agg.show()
+
+    union.createOrReplaceTempView("people")
+    val sqlDF = spark.sql("SELECT State, COUNT(CustomerId) as Customers FROM people GROUP BY State")
+    sqlDF.show()
 
     spark.stop()
   }
 
-  def bootstrapSpark(): SparkSession =
-    SparkSession.builder
+  def bootstrapSpark(): SparkSession = {
+    val spark = SparkSession.builder
       .appName("Simple Application")
       .master("local")
       .getOrCreate()
+
+    spark.sparkContext.setLogLevel("ERROR")
+
+    spark
+  }
 }

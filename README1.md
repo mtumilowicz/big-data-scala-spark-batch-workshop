@@ -13,6 +13,7 @@
 * https://sparkbyexamples.com/spark/spark-sql-dataframe-join/
 * https://towardsdatascience.com/write-clean-and-solid-scala-spark-jobs-28ac4395424a
 
+# general
 * 1.2.1 Spark in a data processing/engineering scenario
     * excels when it plays in a big data scenario, where you ingest data, clean it, transform it, and republish it
     * The four steps of a typical Spark (big data) scenario performed by data engineering are as follows:
@@ -29,29 +30,30 @@
           on it and make decisions based on it.
     * The process includes four steps, and after each step, the data lands in a zone:
       1 Ingesting data
-      * Spark can ingest data from a variety of sources
-      * If you can’t find a supported format, you can build your own data sources.
-      * I call data at this stage raw data.
-      * You can also find this zone named the staging, landing, bronze, or even swamp zone.
-      1 Improving data quality (DQ)
-      * Before processing your data, you may want to check the quality of the data itself.
-      * An example of DQ is to ensure that all birth dates are in the past.
-      * As part of this process, you can also elect to obfuscate some data: if you
-      are processing Social Security numbers (SSNs) in a health-care environment, you
-      can make sure that the SSNs are not accessible to developers or nonauthorized
-      personnel.
-      * After your data is refined, I call this stage the pure data zone.
-      * You may also find this zone called the refinery, silver, pond, sandbox, or exploration zone.
-      1 Transforming data
-      * The next step is to process your data.
-      * You can join it with other datasets, apply custom functions, perform aggregations, implement
-      machine learning, and more.
-      * The goal of this step is to get rich data, the fruit of your analytics work.
-      * This zone may also be called the production, gold, refined, lagoon, or operationalization zone.
-      1 Loading and publishing
-      * As in an ETL process, 5 you can finish by loading the data into a data warehouse, using
-      a business intelligence (BI) tool, calling APIs, or saving the data in a file
-      * The result is actionable data for your enterprise.
+        * Spark can ingest data from a variety of sources
+        * If you can’t find a supported format, you can build your own data sources.
+        * I call data at this stage raw data.
+        * You can also find this zone named the staging, landing, bronze, or even swamp zone.
+          1 Improving data quality (DQ)
+        * Before processing your data, you may want to check the quality of the data itself.
+        * An example of DQ is to ensure that all birth dates are in the past.
+        * As part of this process, you can also elect to obfuscate some data: if you
+          are processing Social Security numbers (SSNs) in a health-care environment, you
+          can make sure that the SSNs are not accessible to developers or nonauthorized
+          personnel.
+        * After your data is refined, I call this stage the pure data zone.
+        * You may also find this zone called the refinery, silver, pond, sandbox, or exploration zone.
+          1 Transforming data
+        * The next step is to process your data.
+        * You can join it with other datasets, apply custom functions, perform aggregations, implement
+          machine learning, and more.
+        * The goal of this step is to get rich data, the fruit of your analytics work.
+        * This zone may also be called the production, gold, refined, lagoon, or operationalization zone.
+          1 Loading and publishing
+        * As in an ETL process, 5 you can finish by loading the data into a data warehouse, using
+          a business intelligence (BI) tool, calling APIs, or saving the data in a file
+        * The result is actionable data for your enterprise.
+# dataframe    
 * 1.4 Why you will love the dataframe
     * 1.4.1 The dataframe from a Java perspective
         * the dataframe will look like a ResultSet
@@ -116,9 +118,11 @@
                   part of Apache Spark that focuses on enhancing three key areas: memory manage-
                   ment and binary processing, cache-aware computation, and code generation        
 
+# catalyst
 * Finally, you will have a deeper look at Catalyst, Spark’s built-in optimizer.
     * Like an RDBMS query optimizer, it can dump the query plan, which is useful for debugging.
-      
+
+# job      
 * What do I mean by recipe? Is it a job?
       * Spark defines a job as a parallel computation consisting of multiple tasks that gets
       spawned in response to a Spark action (such as save() , collect() , and more).
@@ -135,6 +139,7 @@
         * Spark embeds an optimizer, called Catalyst
           * Before performing the action, Catalyst looks at the DAG and makes a better one
         * To access the plan, you can use the explain() method of the dataframe
+# session        
   * You will study three ways of interacting with Spark:
         * Local mode
             * which is certainly the developers’ preferred way, as everything runs
@@ -199,17 +204,17 @@
         * Next, the cluster manager sends your application code to the executors
         * Finally, SparkSession sends tasks to the executors to run.
 
-    * Note that CSV has become a generic term: nowadays, the C means character more than comma.
-        * You will find files in which values are separated by semicolons, tabs, pipes ( | ), and more
-
-    * Starting with v2.2, Spark can ingest more-complex JSON files and is not constrained
-      to the JSON Lines format
-        ```
-        Dataset<Row> df = spark.read()
-            .format("json")
-            .option("multiline", true) // key to processing multiline JSON!
-            .load("data/countrytravelinfo.json");
-        ```
+# ingestion
+* Note that CSV has become a generic term: nowadays, the C means character more than comma.
+    * You will find files in which values are separated by semicolons, tabs, pipes ( | ), and more
+* Starting with v2.2, Spark can ingest more-complex JSON files and is not constrained
+  to the JSON Lines format
+    ```
+    Dataset<Row> df = spark.read()
+        .format("json")
+        .option("multiline", true) // key to processing multiline JSON!
+        .load("data/countrytravelinfo.json");
+    ```
 * 7.8 File formats for big data
     * Big data brings its own set of file formats: Avro, ORC, or Parquet
     * 7.8.1 The problem with traditional file formats
@@ -244,7 +249,7 @@
         * Parquet also supports compound types such as lists and maps.
     * 7.8.5 Comparing Avro, ORC, and Parquet
         * Based on popularity, if you have a choice to make, Parquet is probably the way to go.
-## 8 Ingestion from databases
+## ingestion from databases
 * 9.1 What is a data source?
     * A data source provides data to Spark.
     * Once data is ingested in Spark from this data
@@ -259,14 +264,14 @@
     * Spark will store the data and schema in the dataframe.
         * The “guy” in charge of reading and creating the dataframe is the dataframe reader.
         * However, the reader needs to have a way to communicate with the data source itself
-* 11.1 Working with Spark SQL
-    * To enable a table-like SQL usage in Spark, you have to create a view.
-        * The scope can be local (to the session) as you just did, or global (to the application)
-        ```      
-        df.createOrReplaceTempView("geodata");
-      
-        Dataset<Row> smallCountries = spark.sql("SELECT * FROM geodata WHERE yr1980 < 1 ORDER BY 2 LIMIT 5");
-        ```  
+# sql
+* To enable a table-like SQL usage in Spark, you have to create a view.
+    * The scope can be local (to the session) as you just did, or global (to the application)
+    ```      
+    df.createOrReplaceTempView("geodata");
+  
+    Dataset<Row> smallCountries = spark.sql("SELECT * FROM geodata WHERE yr1980 < 1 ORDER BY 2 LIMIT 5");
+    ```  
 * 11.2 The difference between local and global views
     * Whether you are using a local or global view, views are only temp (for temporary).
         * When the session ends, the local views are removed; when all sessions end, the global
@@ -278,6 +283,7 @@
     * The SparkSession.table() method is worth mentioning.
         * The method returns the specified view as a dataframe, directly from the session, enabling
           you to avoid passing references to the dataframe itself.
+# data transformation
 * 12.1 What is data transformation?
     * Data transformation is the process of converting data from one format or structure into
       another
@@ -312,7 +318,7 @@
     * Arrays are exploded to as many rows as the number of
       elements in the array using the explode() method.
         * .withColumn("items", explode(df.col("books")))
-## 14 Extending transformations with user-defined functions
+# user-defined functions
 * user-defined functions (UDFs)
     * UDFs are an excellent choice for performing data quality rules, whether you build
       the rules yourself or use external resources such as libraries
@@ -335,7 +341,7 @@
         * Black box for the optimizer
         * Catalyst is the key component, which optimizes the DAG.
         * Catalyst does not know anything about what your function is doing.
-## 15 Aggregating your data
+## aggregations
 * PERFORMING AN AGGREGATION USING THE DATAFRAME API
     ```
     Dataset<Row> apiDf = df
@@ -360,58 +366,58 @@
         " GROUP BY firstName, lastName, state";
     Dataset<Row> sqlDf = spark.sql(sqlStatement);
     ```
-## 16 Cache and checkpoint: Enhancing Spark’s performances
-    * Apache Spark offers two distinct techniques for increasing performance:
-        * Caching, via cache() or persist() , which can save your data and the data lineage
-        * Checkpointing, via checkpoint() , to save your data, without the lineage
-    * 16.1.1 The usefulness of Spark caching
-        * Caching will persist the dataframe
-          in memory, or disk, or a combination of memory and disk
-        * Caching will also save the lineage of the data. 
-            * Saving the lineage is useful only if you need to rebuild your dataset from scratch, which will 
-              happen if one of the nodes of your cluster fails
-        * Spark offers two methods for caching: cache() and persist()
-            * They work the same, except that persist() enables you to specify the storage level you wish to use. 
-                * When using an argument, cache() is a synonym for persist(StorageLevel.MEMORY_ONLY)
-            * Available storage levels with the persist() method are as follows:
-              * MEMORY_ONLY
-                * This is the default level
-                * It will store the RDD composing the dataframe as deserialized Java objects in the JVM. 
-                * If the RDD does not fit in memory, Spark will not cache the partitions; 
-                    * Spark will recompute as needed.
-                    * You will not be notified.
-              * MEMORY_AND_DISK
-                    * Similar to MEMORY_ONLY , except that when Spark runs out of memory, it will serialize the 
-                      RDD on disk. 
-                    * It is slower, as disk is slower, but performance will vary depending on the storage class 
-                you may have on your node (NVMe drives versus mechanical drives, for example).
-              * MEMORY_ONLY_SER
-                    * Similar to MEMORY_ONLY , but the Java objects are serialized.
-                    * This should take less space, but reading will consume more CPU.
-              * MEMORY_AND_DISK_SER
-                    * Similar to MEMORY_AND_DISK with serialization.
-              * DISK_ONLY
-                    * Stores the partitions of the RDD composing the dataframe to disk.
-              * OFF_HEAP
-                    * Similar behavior to MEMORY_ONLY_SER , but it uses off-heap memory.
-                    * Off-heap usage needs to be activated
-        * You can use unpersist() to free the cache, as well as storageLevel() to query the
-          dataframe’s current storage level.
-    * 16.1.2 The subtle effectiveness of Spark checkpointing
-        * Checkpoints are another way to increase Spark performance
-        * The checkpoint() method will truncate the DAG (or logical plan) and save the
-          content of the dataframe to disk. 
-        * The dataframe is saved in the checkpoint directory.
-        * A checkpoint can be eager or lazy. 
-            * When eager, which is the default, the checkpoint will be created right away. 
-            * If you use false with the checkpoint() method, the checkpoint will be created when an action is called.
-    * 16.1.3 Using caching and checkpointing
-        * Cache uses memory. Checkpoints are saved in files.
-        * Cache will be cleaned when the session ends (or sooner). 
-            * However, checkpoints are never clean and will stay on disk as Java serializable files,
-            which means they can easily be opened
-        * Nothing forbids you from combining caching and checkpointing, but I did not find any
-          use case for that.
+# performance
+* Apache Spark offers two distinct techniques for increasing performance:
+    * Caching, via cache() or persist() , which can save your data and the data lineage
+    * Checkpointing, via checkpoint() , to save your data, without the lineage
+* 16.1.1 The usefulness of Spark caching
+    * Caching will persist the dataframe
+      in memory, or disk, or a combination of memory and disk
+    * Caching will also save the lineage of the data. 
+        * Saving the lineage is useful only if you need to rebuild your dataset from scratch, which will 
+          happen if one of the nodes of your cluster fails
+    * Spark offers two methods for caching: cache() and persist()
+        * They work the same, except that persist() enables you to specify the storage level you wish to use. 
+            * When using an argument, cache() is a synonym for persist(StorageLevel.MEMORY_ONLY)
+        * Available storage levels with the persist() method are as follows:
+          * MEMORY_ONLY
+            * This is the default level
+            * It will store the RDD composing the dataframe as deserialized Java objects in the JVM. 
+            * If the RDD does not fit in memory, Spark will not cache the partitions; 
+                * Spark will recompute as needed.
+                * You will not be notified.
+          * MEMORY_AND_DISK
+                * Similar to MEMORY_ONLY , except that when Spark runs out of memory, it will serialize the 
+                  RDD on disk. 
+                * It is slower, as disk is slower, but performance will vary depending on the storage class 
+            you may have on your node (NVMe drives versus mechanical drives, for example).
+          * MEMORY_ONLY_SER
+                * Similar to MEMORY_ONLY , but the Java objects are serialized.
+                * This should take less space, but reading will consume more CPU.
+          * MEMORY_AND_DISK_SER
+                * Similar to MEMORY_AND_DISK with serialization.
+          * DISK_ONLY
+                * Stores the partitions of the RDD composing the dataframe to disk.
+          * OFF_HEAP
+                * Similar behavior to MEMORY_ONLY_SER , but it uses off-heap memory.
+                * Off-heap usage needs to be activated
+    * You can use unpersist() to free the cache, as well as storageLevel() to query the
+      dataframe’s current storage level.
+* 16.1.2 The subtle effectiveness of Spark checkpointing
+    * Checkpoints are another way to increase Spark performance
+    * The checkpoint() method will truncate the DAG (or logical plan) and save the
+      content of the dataframe to disk. 
+    * The dataframe is saved in the checkpoint directory.
+    * A checkpoint can be eager or lazy. 
+        * When eager, which is the default, the checkpoint will be created right away. 
+        * If you use false with the checkpoint() method, the checkpoint will be created when an action is called.
+* 16.1.3 Using caching and checkpointing
+    * Cache uses memory. Checkpoints are saved in files.
+    * Cache will be cleaned when the session ends (or sooner). 
+        * However, checkpoints are never clean and will stay on disk as Java serializable files,
+        which means they can easily be opened
+    * Nothing forbids you from combining caching and checkpointing, but I did not find any
+      use case for that.
 * 16.3 Going further in performance optimization
     * A lot of the issues can come from key skewing (or data skewing): the data is so frag-
       mented among partitions that a join operation becomes very long.
@@ -420,32 +426,32 @@
         * Repartitioning is most likely to be an expensive
           operation but it will increase the performance for the join afterward.
     * Data skewing is not a Spark-specific problem; it can arise from any distributed dataset.
-## 17 Exporting data and building full data pipelines
-  * 17.1.4 Exporting the data
-      * The write() method returns a DataFrameWriter
-      * After the file(s) have been successfully exported, Spark will add a _SUCCESS file to the
-        directory, allowing you to monitor whether the operation, which can be lengthy, has
-        completed as expected.
-  * 17.1.5 Exporting the data: What really happened?
-      * When you load two datasets, they will be stored in two dataframes.
-          * Each dataframe will have at least one partition.
-          * As you perform a union operation on those dataframes, you will have one resulting
-            dataframe, but the partitions will now be two
-          * The filtering operation, which removes the nominal and low confidence levels to
-            keep the records with high confidence, does not modify the structure of the parti-
-            tions: you will still have two.
-      * Write the Parquet files from two
-        partitions, hence creating two files.
+# exporting data
+* 17.1.4 Exporting the data
+    * The write() method returns a DataFrameWriter
+    * After the file(s) have been successfully exported, Spark will add a _SUCCESS file to the
+      directory, allowing you to monitor whether the operation, which can be lengthy, has
+      completed as expected.
+* 17.1.5 Exporting the data: What really happened?
+    * When you load two datasets, they will be stored in two dataframes.
+        * Each dataframe will have at least one partition.
+        * As you perform a union operation on those dataframes, you will have one resulting
+          dataframe, but the partitions will now be two
+        * The filtering operation, which removes the nominal and low confidence levels to
+          keep the records with high confidence, does not modify the structure of the parti-
+          tions: you will still have two.
+    * Write the Parquet files from two
+      partitions, hence creating two files.
 * 17.3 Accessing cloud storage services from Spark
     * One typical use case is to ingest data from an on-premises
       database, and write the data into cloud storage (for example, Amazon S3)
 
-## 18 Exploring deployment constraints: Understanding the ecosystem
-    * The following is a nonexhaustive list of the main resource managers:
-        * The built-in Spark resource manager
-        * YARN
-        * Mesos
-        * Kubernetes
+## deployment
+* The following is a nonexhaustive list of the main resource managers:
+    * The built-in Spark resource manager
+    * YARN
+    * Mesos
+    * Kubernetes
 * 18.2 Sharing files with Spark
     * 18.2.1 Accessing the data contained in files
         * Each worker needs to access the data.
@@ -479,30 +485,31 @@
         * This system is convenient for distributing files to a lot of nodes, each node being a subscriber
         * Using a file-sharing service like Box or Dropbox in a Spark environment: files are
           automatically published to each node, allowing an easy share of each file.
-* 18.3 Making sure your Spark application is secure
-  * Spark has built-in security features, but by default, they are not activated
-    * When data is within dataframes in Spark, it is isolated per session.
-        * There is no way to connect to an existing session, so data isolation guarantees no easy tampering or
-          even read access.
-    * you need to worry about the following:
-        * Data being transferred over the network
-            * You can think of snooping data, altering data, denial-of-service attacks, and more.
-        * Data being permanently or temporarily stored on disk
-            * Someone could have access to the data.
-    * 18.3.1 Securing the network components of your infrastructure
-        * Spark components rely on remote procedure calls (RPCs) between the components
-        * To secure your infrastructure, you can do the following:
-            * Add authentication between the components, using the spark.authenticate.* series of configuration entries.
-            * Add encryption using the spark.network.crypto.* entries in the configuration file.
-    * 18.3.2 Securing Spark’s disk usage
-        * There are two types of disk usage to consider:
-            * Normal I/O
-                * When your application uses read() / load() , write()/save() , or
-                  when you collect() the data to the driver and write the result to disk
-            * Overflow and temporary I/O
-                * When Spark needs to write something to disk without you asking
-                * As you know by now, Apache Spark heavily uses memory to process data.
-                    * However, in cases like ingesting data bigger than the available memory, Spark will
-                      store those files on disk.
-                    * To activate encryption for those files, you can use the spark.io.encryption.*
-                      set of configuration entries.
+
+# security
+* Spark has built-in security features, but by default, they are not activated
+  * When data is within dataframes in Spark, it is isolated per session.
+      * There is no way to connect to an existing session, so data isolation guarantees no easy tampering or
+        even read access.
+  * you need to worry about the following:
+      * Data being transferred over the network
+          * You can think of snooping data, altering data, denial-of-service attacks, and more.
+      * Data being permanently or temporarily stored on disk
+          * Someone could have access to the data.
+  * 18.3.1 Securing the network components of your infrastructure
+      * Spark components rely on remote procedure calls (RPCs) between the components
+      * To secure your infrastructure, you can do the following:
+          * Add authentication between the components, using the spark.authenticate.* series of configuration entries.
+          * Add encryption using the spark.network.crypto.* entries in the configuration file.
+  * 18.3.2 Securing Spark’s disk usage
+      * There are two types of disk usage to consider:
+          * Normal I/O
+              * When your application uses read() / load() , write()/save() , or
+                when you collect() the data to the driver and write the result to disk
+          * Overflow and temporary I/O
+              * When Spark needs to write something to disk without you asking
+              * As you know by now, Apache Spark heavily uses memory to process data.
+                  * However, in cases like ingesting data bigger than the available memory, Spark will
+                    store those files on disk.
+                  * To activate encryption for those files, you can use the spark.io.encryption.*
+                    set of configuration entries.

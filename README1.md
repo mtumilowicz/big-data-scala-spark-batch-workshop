@@ -14,6 +14,73 @@
 * https://towardsdatascience.com/write-clean-and-solid-scala-spark-jobs-28ac4395424a
 
 # general
+* Apache Spark is a unified engine designed for large-scale distributed data processing,
+  on premises in data centers or in the cloud
+* Spark provides in-memory storage for intermediate computations, making it much
+  faster than Hadoop MapReduce.
+* It incorporates libraries with composable APIs for
+  machine learning (MLlib), SQL for interactive queries (Spark SQL), stream process‐
+  ing (Structured Streaming) for interacting with real-time data, and graph processing
+  (GraphX).
+* Apache Spark’s Distributed Execution
+    * Spark is a distributed data processing
+      engine with its components working collaboratively on a cluster of machines
+    * Apache Spark components and architecture
+      ![alt text](img/spark/architecture.png)
+        * At a high level in the Spark architecture, a Spark
+          application consists of a driver program that is responsible for orchestrating parallel
+          operations on the Spark cluster. The driver accesses the distributed components in
+          the cluster—the Spark executors and cluster manager—through a SparkSession
+    * Spark driver
+        * responsible for instantiating a SparkSession , the
+          Spark driver has multiple roles: it communicates with the cluster manager; it requests
+          resources (CPU, memory, etc.) from the cluster manager for Spark’s executors
+          (JVMs); and it transforms all the Spark operations into DAG computations, schedules
+          them, and distributes their execution as tasks across the Spark executors.
+        * Once the resources are allocated, it communicates directly with the executors.
+    * SparkSession
+        * SparkSession became a unified conduit to all Spark operations and data
+        * Through this one conduit, you can create JVM runtime parameters, define Data‐
+          Frames and Datasets, read from data sources, access catalog metadata, and issue
+          Spark SQL queries.
+        * SparkSession provides a single unified entry point to all of
+          Spark’s functionality.
+    * Cluster manager
+        * responsible for managing and allocating resources for the
+          cluster of nodes on which your Spark application runs
+        * supports
+          four cluster managers: the built-in standalone cluster manager, Apache Hadoop
+          YARN, Apache Mesos, and Kubernetes
+    * Spark executor
+        * runs on each worker node in the cluster.
+        * The executors communicate with the driver program and are responsible for executing tasks on the workers.
+        * In most deployments modes, only a single executor runs per node.
+    * Deployment modes
+        * Because the cluster man‐
+          ager is agnostic to where it runs (as long as it can manage Spark’s executors and
+          fulfill resource requests), Spark can be deployed in some of the most popular envi‐
+          ronments—such as Apache Hadoop YARN and Kubernetes—and can operate in dif‐
+          ferent modes
+        * Mode: Local
+            * Spark driver: Runs on a single JVM, like a
+              laptop or single node
+            * Spark executor: Runs on the same JVM as the
+              driver
+            * Cluster manager: Runs on the same host
+        * Mode: Kubernetes
+            * Spark driver: Runs in a Kubernetes pod
+            * Spark executor: Each worker runs within its own
+              pod
+            * Cluster manager: Kubernetes Master
+* Distributed data and partitions
+    * Actual physical data is distributed across storage as partitions residing in either HDFS
+      or cloud storage
+    * While the data is distributed as partitions across the
+      physical cluster, Spark treats each partition as a high-level logical data abstraction—as
+      a DataFrame in memory
+    * Though this is not always possible, each Spark executor is
+      preferably allocated a task that requires it to read the partition closest to it in the net‐
+      work, observing data locality.    
 * 1.2.1 Spark in a data processing/engineering scenario
     * excels when it plays in a big data scenario, where you ingest data, clean it, transform it, and republish it
     * The four steps of a typical Spark (big data) scenario performed by data engineering are as follows:
@@ -53,7 +120,82 @@
         * As in an ETL process, 5 you can finish by loading the data into a data warehouse, using
           a business intelligence (BI) tool, calling APIs, or saving the data in a file
         * The result is actionable data for your enterprise.
-# dataframe    
+# components overview
+* Step 3: Understanding Spark Application Concepts
+    * Application
+      A user program built on Spark using its APIs. It consists of a driver program and
+      executors on the cluster.
+    *  SparkSession
+       An object that provides a point of entry to interact with underlying Spark func‐
+       tionality and allows programming Spark with its APIs. In an interactive Spark
+       shell, the Spark driver instantiates a SparkSession for you, while in a Spark
+       application, you create a SparkSession object yourself.
+    *  Job
+       A parallel computation consisting of multiple tasks that gets spawned in response
+       to a Spark action (e.g., save() , collect() ).
+    *  Stage
+       Each job gets divided into smaller sets of tasks called stages that depend on each
+       other.
+    *   Task
+        A single unit of work or execution that will be sent to a Spark executor.
+# dataframe
+* Dataset Encoders
+    * Encoders convert data in off-heap memory from Spark’s internal Tungsten format to
+      JVM Java objects
+    *  In other words, they serialize and deserialize Dataset objects from
+       Spark’s internal format to JVM objects, including primitive data types
+    * Spark has built-in support for automatically generating encoders for primitive types
+      (e.g., string, integer, long), Scala case classes, and JavaBeans
+    * for Scala, Spark automatically generates the bytecode for these efficient
+      converters
+    * Spark’s Internal Format Versus Java Object Format
+        * Java objects have large overheads—header info, hashcode, Unicode info, etc.
+        * Instead of creating JVM-based objects for Datasets or DataFrames, Spark allocates
+          off-heap Java memory to lay out their data and employs encoders to convert the data
+          from in-memory representation to JVM object
+    * Serialization and Deserialization (SerDe)
+        * serialization and deserialization is the
+          process by which a typed object is encoded (serialized) into a binary presentation or
+          format by the sender and decoded (deserialized) from binary format into its respec‐
+          tive data-typed object by the receiver
+* Converting DataFrames to Datasets
+    * val bloggersDS = spark
+      .read
+      .format("json")
+      .option("path", "/data/bloggers/bloggers.json")
+      .load()
+      .as[Bloggers]
+* The Dataset API
+    * Datasets take on two characteristics: typed and untyped APIs
+    * Conceptually, you can think of a DataFrame in Scala as an alias for a collection of
+      generic objects, Dataset[Row] , where a Row is a generic untyped JVM object that may
+      hold different types of fields. A Dataset, by contrast, is a collection of strongly typed
+      JVM objects in Scala or a class in Java
+    * Dataset is:
+      a strongly typed collection of domain-specific objects that can be transformed in paral‐
+      lel using functional or relational operations. Each Dataset [in Scala] also has an unty‐
+      ped view called a DataFrame, which is a Dataset of Row
+* The DataFrame API
+    * Inspired by pandas DataFrames in structure, format, and a few specific operations,
+      Spark DataFrames are like distributed in-memory tables with named columns and
+      schemas, where each column has a specific data type: integer, string, array, map, real,
+      date, timestamp, etc.
+    * To a human’s eye, a Spark DataFrame is like a table
+* Schemas and Creating DataFrames
+    * A schema in Spark defines the column names and associated data types for a DataFrame
+    * Defining a schema
+      up front as opposed to taking a schema-on-read approach offers three benefits:
+      • You relieve Spark from the onus of inferring data types.
+      • You prevent Spark from creating a separate job just to read a large portion of
+      your file to ascertain the schema, which for a large data file can be expensive and
+      time-consuming.
+      • You can detect errors early if data doesn’t match the schema.
+    * Two ways to define a schema
+      * Spark allows you to define a schema in two ways. One is to define it programmati‐
+      cally, and the other is to employ a Data Definition Language (DDL) string, which is
+      much simpler and easier to read.
+        * val schema = StructType(Array(StructField("author", StringType, false), // programmatically
+        * val schema = "author STRING, title STRING, pages INT" // DDL    
 * 1.4 Why you will love the dataframe
     * 1.4.1 The dataframe from a Java perspective
         * the dataframe will look like a ResultSet
@@ -119,6 +261,36 @@
                   ment and binary processing, cache-aware computation, and code generation        
 
 # catalyst
+* Spark SQL and the Underlying Engine
+    * At the core of the Spark SQL engine are the Catalyst optimizer and Project Tungsten.
+    * The Catalyst Optimizer
+      ![alt text](img/spark/computational_phases.png)
+        * The Catalyst optimizer takes a computational query and converts it into an execution
+          plan
+        * scala: df.queryExecution.logical or df.queryExecution.optimizedPlan
+        * Phase 1: Analysis
+            * The Spark SQL engine begins by generating an abstract syntax tree (AST) for the SQL
+              or DataFrame query
+        * Phase 2: Logical optimization
+          * Applying a standard-
+          rule based optimization approach, the Catalyst optimizer will first construct a set of
+          multiple plans and then, using its cost-based optimizer (CBO), assign costs to each
+          plan
+          * they may include,
+          for example, the process of constant folding, predicate pushdown, projection prun‐
+          ing, Boolean expression simplification, etc.
+        * Phase 3: Physical planning
+            * Spark SQL generates an optimal physical plan for the selected logical
+              plan, using physical operators that match those available in the Spark execution
+              engine.
+        * Phase 4: Code generation
+            * generating efficient Java bytecode to
+              run on each machine
+            * Project Tungsten, which facilitates
+              whole-stage code generation, plays a role here.
+                * Just what is whole-stage code generation? It’s a physical query optimization phase that
+                  collapses the whole query into a single function, getting rid of virtual function calls
+                  and employing CPU registers for intermediate data.
 * Finally, you will have a deeper look at Catalyst, Spark’s built-in optimizer.
     * Like an RDBMS query optimizer, it can dump the query plan, which is useful for debugging.
 
@@ -205,6 +377,44 @@
         * Finally, SparkSession sends tasks to the executors to run.
 
 # ingestion
+* Data Sources for DataFrames and SQL Tables
+    * DataFrameReader
+        * is the core construct for reading data from a data source into a
+          DataFrame
+        * DataFrameReader.format(args).option("key", "value").schema(args).load()
+        * you can only access a DataFrameReader through a SparkSession instance
+            * That is, you cannot create an instance of DataFrameReader
+            * SparkSession.read
+              // or
+              SparkSession.readStream
+            * read returns a handle to DataFrameReader to read into a DataFrame from a
+              static data source, readStream returns an instance to read from a streaming source.
+        * In general, no schema is needed when reading from a static Parquet
+          data source—the Parquet metadata usually contains the schema, so
+          it’s inferred.
+            * Parquet is the default and preferred data source for Spark because
+              it’s efficient, uses columnar storage, and employs a fast compres‐
+              sion algorithm.
+    * DataFrameWriter
+        * it saves or writes data to a speci‐
+          fied built-in data source
+        * you access its instance not
+          from a SparkSession but from the DataFrame you wish to save
+        * DataFrameWriter.format(args)
+          .option(args)
+          .bucketBy(args)
+          .partitionBy(args)
+          .save(path)
+        * DataFrameWriter.format(args).option(args).sortBy(args).saveAsTable(table)
+        * To get an instance handle, use:
+          DataFrame.write
+          // or
+          DataFrame.writeStream
+    * Spark provides an inter‐
+      face, DataFrameReader , that enables you to read data into a DataFrame from myriad
+      data sources in formats such as JSON, CSV, Parquet, Text, Avro, ORC, etc.
+    * to write a DataFrame back to a data source in a particular format, Spark uses
+      DataFrameWriter
 * Note that CSV has become a generic term: nowadays, the C means character more than comma.
     * You will find files in which values are separated by semicolons, tabs, pipes ( | ), and more
 * Starting with v2.2, Spark can ingest more-complex JSON files and is not constrained
@@ -247,8 +457,36 @@
     * 7.8.4 Parquet is also a columnar storage format
         * Parquet supports compression, and you can add columns at the end of the schema.
         * Parquet also supports compound types such as lists and maps.
+            * If the DataFrame is written as Parquet, the
+              schema is preserved as part of the Parquet metadata.
+      * In this case, subsequent reads
+        back into a DataFrame do not require you to manually supply a schema.
     * 7.8.5 Comparing Avro, ORC, and Parquet
         * Based on popularity, if you have a choice to make, Parquet is probably the way to go.
+* Parquet
+    * it’s the default data
+      source in Spark
+    * is an open source columnar file format that offers many I/O
+      optimizations (such as compression, which saves storage space and allows for quick
+      access to data columns).
+    * we recommend that after you have
+      transformed and cleansed your data, you save your DataFrames in the Parquet format
+      for downstream consumption
+    * Reading Parquet files into a DataFrame
+        * Parquet files are stored in a directory structure that contains the data files, metadata,
+          a number of compressed files, and some status files.
+        * Metadata in the footer contains
+          the version of the file format, the schema, and column data such as the path, etc
+    * Reading Parquet files into a Spark SQL table
+    * Writing DataFrames to Parquet files
+        * df.write.format("parquet")
+          .mode("overwrite")
+          .option("compression", "snappy")
+          .save("/tmp/data/parquet/df_parquet")
+    * Writing DataFrames to Spark SQL tables
+        * df.write
+          .mode("overwrite")
+          .saveAsTable("us_delay_flights_tbl")
 ## ingestion from databases
 * 9.1 What is a data source?
     * A data source provides data to Spark.
@@ -265,6 +503,40 @@
         * The “guy” in charge of reading and creating the dataframe is the dataframe reader.
         * However, the reader needs to have a way to communicate with the data source itself
 # sql
+* SQL Tables and Views
+    * Associated with each table in Spark is its relevant metadata, which is
+      information about the table and its data: the schema, description, table name, data‐
+      base name, column names, partitions, physical location where the actual data resides,
+      etc.
+        * All of this is stored in a central metastore.
+    * Instead of having a separate metastore for Spark tables, Spark by default uses the
+      Apache Hive metastore, located at /user/hive/warehouse, to persist all the metadata
+      about your tables.
+* Managed Versus UnmanagedTables
+    * Spark allows you to create two types of tables: managed and unmanaged
+    * For a man‐
+      aged table, Spark manages both the metadata and the data in the file store. This could
+      be a local filesystem, HDFS, or an object store such as Amazon S3 or Azure Blob.
+    * an unmanaged table, Spark only manages the metadata, while you manage the data
+      yourself in an external data source such as Cassandra.
+    * With a managed table, because Spark manages everything, a SQL command such as
+      DROP TABLE table_name deletes both the metadata and the data.
+        * With an unmanaged
+          table, the same command will delete only the metadata, not the actual data.
+  * Tables reside within a database. By default, Spark creates tables under the default
+    database.
+    * Spark can create views on top of existing tables
+      * The difference between a view and a
+        table is that views don’t actually hold the data; tables persist after your Spark applica‐
+        tion terminates, but views disappear.   
+* Viewing the Metadata
+    * as mentioned previously, Spark manages the metadata associated with each managed
+      or unmanaged table.
+        * This is captured in the Catalog , a high-level abstraction in
+          Spark SQL for storing metadata.
+    * spark.catalog.listDatabases()
+      spark.catalog.listTables()
+      spark.catalog.listColumns("us_delay_flights_tbl")        
 * To enable a table-like SQL usage in Spark, you have to create a view.
     * The scope can be local (to the session) as you just did, or global (to the application)
     ```      
@@ -284,6 +556,45 @@
         * The method returns the specified view as a dataframe, directly from the session, enabling
           you to avoid passing references to the dataframe itself.
 # data transformation
+* Transformations, Actions, and Lazy Evaluation
+    * Spark operations on distributed data can be classified into two types: transformations
+      and actions
+    * Transformations, as the name suggests, transform a Spark DataFrame
+      into a new DataFrame without altering the original data, giving it the property of
+      immutability
+        * Put another way, an operation such as select() or filter() will not
+          change the original DataFrame; instead, it will return the transformed results of the
+          operation as a new DataFrame.
+    * All transformations are evaluated lazily.
+        * That is, their results are not computed imme‐
+          diately, but they are recorded or remembered as a lineage.
+            * A recorded lineage allows
+              Spark, at a later time in its execution plan, to rearrange certain transformations, coa‐
+              lesce them, or optimize transformations into stages for more efficient execution.
+                * Lazy
+                  evaluation is Spark’s strategy for delaying execution until an action is invoked or data
+                  is “touched” (read from or written to disk).
+            * An action triggers the lazy evaluation of all the recorded transformations
+    * While lazy evaluation allows Spark to optimize your queries by peeking into your
+      chained transformations, lineage and data immutability provide fault tolerance.
+        * Because Spark records each transformation in its lineage and the DataFrames are
+          immutable between transformations, it can reproduce its original state by simply
+          replaying the recorded lineage, giving it resiliency in the event of failures.
+    * Transformations Actions
+      orderBy() show()
+      groupBy() take()
+      filter() count()
+      select() collect()
+      join() save()
+* Narrow and Wide Transformations
+    * Transformations can be classified as having either narrow dependencies or wide
+      dependencies. Any transformation where a single output partition can be computed
+      from a single input partition is a narrow transformation. For example, in the previous
+      code snippet, filter() and contains() represent narrow transformations because
+      they can operate on a single partition and produce the resulting output partition
+      without any exchange of data.
+    * However, groupBy() or orderBy() instruct Spark to perform wide transformations,
+      where data from other partitions is read in, combined, and written to disk
 * 12.1 What is data transformation?
     * Data transformation is the process of converting data from one format or structure into
       another
@@ -319,6 +630,20 @@
       elements in the array using the explode() method.
         * .withColumn("items", explode(df.col("books")))
 # user-defined functions
+* User-Defined Functions
+    * Spark
+      allows for data engineers and data scientists to define their own functions too. These
+      are known as user-defined functions (UDFs).
+    * // In Scala
+      // Create cubed function
+      val cubed = (s: Long) => {
+      s * s * s
+      }
+      // Register UDF
+      spark.udf.register("cubed", cubed)
+      / In Scala/Python
+      // Query the cubed UDF
+      spark.sql("SELECT id, cubed(id) AS id_cubed FROM udf_test").show()
 * user-defined functions (UDFs)
     * UDFs are an excellent choice for performing data quality rules, whether you build
       the rules yourself or use external resources such as libraries
@@ -367,6 +692,35 @@
     Dataset<Row> sqlDf = spark.sql(sqlStatement);
     ```
 # performance
+    * What is the difference between caching and persistence? 
+      * In Spark they are synonymous
+    * Two API calls, cache() and persist() , offer these capabilities
+        * The latter pro‐
+          vides more control over how and where your data is stored—in memory and on disk,
+          serialized and unserialized
+    * DataFrame.cache()
+        * will store as many of the partitions read in memory across Spark executors
+          as memory allows
+        * While a DataFrame may be fractionally cached,
+          partitions cannot be fractionally cached (e.g., if you have 8 partitions but only 4.5
+          partitions can fit in memory, only 4 will be cached)
+        * When you use cache() or persist() , the DataFrame is not fully
+          cached until you invoke an action that goes through every record
+    * DataFrame.persist()
+        * persist(StorageLevel.LEVEL) is nuanced, providing control over how your data is
+          cached via StorageLevel
+            * DISK_ONLY, OFF_HEAP, etc
+            * Each StorageLevel (except OFF_HEAP ) has an equivalent
+              LEVEL_NAME_2 , which means replicate twice on two different Spark
+              executors: MEMORY_ONLY_2 
+* When to Cache and Persist
+    * where you will want to access a large
+      data set repeatedly for queries or transformations
+      • DataFrames commonly used during iterative machine learning training
+      • DataFrames accessed commonly for doing frequent transformations during ETL
+      or building data pipelines
+    * As a general rule you should use memory caching judiciously, as it can incur resource
+      costs in serializing and deserializing, depending on the StorageLevel used.
 * Apache Spark offers two distinct techniques for increasing performance:
     * Caching, via cache() or persist() , which can save your data and the data lineage
     * Checkpointing, via checkpoint() , to save your data, without the lineage
@@ -513,3 +867,39 @@
                     store those files on disk.
                   * To activate encryption for those files, you can use the spark.io.encryption.*
                     set of configuration entries.
+# joins
+* A Family of Spark Joins
+    * Join operations are a common type of transformation in big data analytics in which
+      two data sets, in the form of tables or DataFrames, are merged over a common
+      matching key
+    * At the heart of these transformations is how Spark computes what data to produce,
+      what keys and associated data to write to the disk, and how to transfer those keys and
+      data to nodes as part of operations like groupBy() , join() , agg() , sortBy() , and
+      reduceByKey() .
+        * This movement is commonly referred to as the shuffle.
+    * Broadcast Hash Join
+        * Also known as a map-side-only join, the broadcast hash join is employed when two
+          data sets, one small (fitting in the driver’s and executor’s memory) and another large
+          enough to ideally be spared from movement, need to be joined over certain condi‐
+          tions or columns
+        * Using a Spark broadcast variable, the smaller data set is broadcas‐
+          ted by the driver to all Spark executors, as shown in Figure 7-6, and subsequently
+          joined with the larger data set on each executor
+        * By default Spark will use a broadcast join if the smaller data set is less than 10 MB.
+        * For example, consider a simple case where you have a large data set of soccer
+          players around the world, playersDF , and a smaller data set of soccer clubs they play
+          for, clubsDF , and you wish to join them over a common key
+        * The BHJ is the easiest and fastest join Spark offers, since it does not involve any shuf‐
+          fle of the data set
+    * Shuffle Sort Merge Join
+        * The sort-merge algorithm is an efficient way to merge two large data sets over a com‐
+          mon key that is sortable, unique, and can be assigned to or stored in the same parti‐
+          tion
+            * that is, two data sets with a common hashable key that end up being on the
+              same partition
+        * From Spark’s perspective, this means that all rows within each data set
+          with the same key are hashed on the same partition on the same executor
+        * this join scheme has two phases: a sort phase followed by a
+          merge phase. The sort phase sorts each data set by its desired join key; the merge
+          phase iterates over each key in the row from each data set and merges the rows if the
+          two keys match.

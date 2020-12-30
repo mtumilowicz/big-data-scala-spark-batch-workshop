@@ -148,25 +148,6 @@
         * programmatically: `val schema = StructType(Array(StructField("author", StringType, false)`
         * DDL: `val schema = "author STRING, title STRING, pages INT"`
 
-## optimizations
-* at the core of the Spark SQL engine are the Catalyst optimizer and Project Tungsten.
-### tungsten
-* focuses on enhancing three key areas: memory management and binary processing, cache-aware 
-  computation, and code generation
-### catalyst
-* like an RDBMS query optimizer
-* converts computational query and converts it into an execution plan
-    ![alt text](img/optimization.jpg)
-* Phase 1: Analysis
-    * Spark SQL engine generates AST tree for the SQL or DataFrame query
-* Phase 2: Logical optimization
-    * Catalyst optimizer will construct a set of multiple plans and then, using its cost-based 
-      optimizer (CBO), assign costs to each plan
-* Phase 3: Physical planning
-    * Spark SQL generates an optimal physical plan for the selected logical plan
-* Phase 4: Code generation
-    * generating efficient Java bytecode to run on each machine
-
 # ingestion
 * Data Sources for DataFrames and SQL Tables
     * DataFrameReader
@@ -714,3 +695,22 @@
           merge phase. The sort phase sorts each data set by its desired join key; the merge
           phase iterates over each key in the row from each data set and merges the rows if the
           two keys match.
+
+## optimizations
+* at the core of the Spark SQL engine are the Catalyst optimizer and Project Tungsten.
+### tungsten
+* focuses on enhancing three key areas: memory management and binary processing, cache-aware
+  computation, and code generation
+### catalyst
+* like an RDBMS query optimizer
+* converts computational query and converts it into an execution plan
+  ![alt text](img/optimization.jpg)
+* Phase 1: Analysis
+    * Spark SQL engine generates AST tree for the SQL or DataFrame query
+* Phase 2: Logical optimization
+    * Catalyst optimizer will construct a set of multiple plans and then, using its cost-based
+      optimizer (CBO), assign costs to each plan
+* Phase 3: Physical planning
+    * Spark SQL generates an optimal physical plan for the selected logical plan
+* Phase 4: Code generation
+    * generating efficient Java bytecode to run on each machine          

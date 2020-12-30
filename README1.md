@@ -1,77 +1,77 @@
 # big-data-scala-spark-batch-workshop
-* [Learning Spark, 2nd Edition](https://www.oreilly.com/library/view/learning-spark-2nd/9781492050032/)
-* [Spark in Action, Second Edition](https://www.manning.com/books/spark-in-action-second-edition)
-* https://medium.com/@mrpowers/testing-spark-applications-8c590d3215fa
-* https://stackoverflow.com/questions/43729262/how-to-write-unit-tests-in-spark-2-0/50581218#50581218
-* https://sparkbyexamples.com/spark/spark-read-and-write-json-file/
-* https://sparkbyexamples.com/spark/spark-schema-explained-with-examples/
-* https://sparkbyexamples.com/spark/spark-read-and-write-json-file/
-* https://bigdataprogrammers.com/merging-two-dataframes-in-spark/
-* https://mungingdata.com/apache-spark/aggregations/
-* https://spark.apache.org/docs/3.0.0-preview/sql-getting-started.html#running-sql-queries-programmatically
-* https://stackoverflow.com/a/43812193 (for windows)
-* https://sparkbyexamples.com/spark/spark-sql-dataframe-join/
-* https://towardsdatascience.com/write-clean-and-solid-scala-spark-jobs-28ac4395424a
+* references
+    * [Learning Spark, 2nd Edition](https://www.oreilly.com/library/view/learning-spark-2nd/9781492050032/)
+    * [Spark in Action, Second Edition](https://www.manning.com/books/spark-in-action-second-edition)
+    * https://medium.com/@mrpowers/testing-spark-applications-8c590d3215fa
+    * https://stackoverflow.com/questions/43729262/how-to-write-unit-tests-in-spark-2-0/50581218#50581218
+    * https://sparkbyexamples.com/spark/spark-read-and-write-json-file/
+    * https://sparkbyexamples.com/spark/spark-schema-explained-with-examples/
+    * https://sparkbyexamples.com/spark/spark-read-and-write-json-file/
+    * https://bigdataprogrammers.com/merging-two-dataframes-in-spark/
+    * https://mungingdata.com/apache-spark/aggregations/
+    * https://spark.apache.org/docs/3.0.0-preview/sql-getting-started.html#running-sql-queries-programmatically
+    * https://stackoverflow.com/a/43812193 (for windows)
+    * https://sparkbyexamples.com/spark/spark-sql-dataframe-join/
+    * https://towardsdatascience.com/write-clean-and-solid-scala-spark-jobs-28ac4395424a
+    * https://www.edureka.co/blog/spark-architecture/
 
-# general
-* Apache Spark is a unified engine designed for large-scale distributed data processing,
-  on premises in data centers or in the cloud
-* Spark provides in-memory storage for intermediate computations, making it much
-  faster than Hadoop MapReduce.
-* It incorporates libraries with composable APIs for
-  machine learning (MLlib), SQL for interactive queries (Spark SQL), stream process‐
-  ing (Structured Streaming) for interacting with real-time data, and graph processing
-  (GraphX).
-* Apache Spark’s Distributed Execution
-    * Spark is a distributed data processing
-      engine with its components working collaboratively on a cluster of machines
-    * Apache Spark components and architecture
-      ![alt text](img/spark/architecture.png)
-        * At a high level in the Spark architecture, a Spark
-          application consists of a driver program that is responsible for orchestrating parallel
-          operations on the Spark cluster. The driver accesses the distributed components in
-          the cluster—the Spark executors and cluster manager—through a SparkSession
-    * Spark driver
-        * responsible for instantiating a SparkSession , the
-          Spark driver has multiple roles: it communicates with the cluster manager; it requests
-          resources (CPU, memory, etc.) from the cluster manager for Spark’s executors
-          (JVMs); and it transforms all the Spark operations into DAG computations, schedules
-          them, and distributes their execution as tasks across the Spark executors.
-        * Once the resources are allocated, it communicates directly with the executors.
+## preface
+
+## spark
+* a unified engine designed for large-scale distributed data processing, on premises in data centers 
+  or in the cloud
+* provides in-memory storage for intermediate computations
+    * faster than Hadoop MapReduce
+* incorporates libraries for
+    * machine learning (MLlib)
+    * SQL for interactive queries (Spark SQL)
+    * stream processing (Structured Streaming) for interacting with real-time data
+    * graph processing (GraphX)
+* components and architecture
+    ![alt text](img/architecture.png)
     * SparkSession
-        * SparkSession became a unified conduit to all Spark operations and data
-        * Through this one conduit, you can create JVM runtime parameters, define Data‐
-          Frames and Datasets, read from data sources, access catalog metadata, and issue
-          Spark SQL queries.
-        * SparkSession provides a single unified entry point to all of
-          Spark’s functionality.
+        * provides a single unified entry point to all of Spark’s functionality
+            * defining DataFrames and Datasets
+            * reading from data sources
+            * writing to data lakes  
+            * accessing catalog metadata
+            * issuing Spark SQL queries
+    * Spark driver
+        * instantiates SparkSession
+        * communicates with the cluster manager
+        * requests resources (CPU, memory, etc.) from the cluster manager for Spark’s executors (JVMs)
+        * transforms operations into DAG computations and schedules them
+        * distributes operations execution as tasks across the Spark executors
+        * once the resources are allocated, it communicates directly with the executors
     * Cluster manager
-        * responsible for managing and allocating resources for the
-          cluster of nodes on which your Spark application runs
-        * supports
-          four cluster managers: the built-in standalone cluster manager, Apache Hadoop
-          YARN, Apache Mesos, and Kubernetes
+        * manages and allocates resources for the cluster of nodes on which your Spark application runs
+        * supports four cluster managers
+            * the built-in standalone cluster manager
+            * Apache Hadoop YARN
+            * Apache Mesos
+            * Kubernetes
     * Spark executor
-        * runs on each worker node in the cluster.
-        * The executors communicate with the driver program and are responsible for executing tasks on the workers.
-        * In most deployments modes, only a single executor runs per node.
-    * Deployment modes
-        * Because the cluster man‐
-          ager is agnostic to where it runs (as long as it can manage Spark’s executors and
-          fulfill resource requests), Spark can be deployed in some of the most popular envi‐
-          ronments—such as Apache Hadoop YARN and Kubernetes—and can operate in dif‐
-          ferent modes
-        * Mode: Local
-            * Spark driver: Runs on a single JVM, like a
-              laptop or single node
-            * Spark executor: Runs on the same JVM as the
-              driver
-            * Cluster manager: Runs on the same host
-        * Mode: Kubernetes
-            * Spark driver: Runs in a Kubernetes pod
-            * Spark executor: Each worker runs within its own
-              pod
-            * Cluster manager: Kubernetes Master
+        * runs on each worker node in the cluster
+            * only a single executor runs per node
+        * communicates with the driver program
+        * executes tasks on the workers
+* Deployment modes
+    * Because the cluster man‐
+      ager is agnostic to where it runs (as long as it can manage Spark’s executors and
+      fulfill resource requests), Spark can be deployed in some of the most popular envi‐
+      ronments—such as Apache Hadoop YARN and Kubernetes—and can operate in dif‐
+      ferent modes
+    * Mode: Local
+        * Spark driver: Runs on a single JVM, like a
+          laptop or single node
+        * Spark executor: Runs on the same JVM as the
+          driver
+        * Cluster manager: Runs on the same host
+    * Mode: Kubernetes
+        * Spark driver: Runs in a Kubernetes pod
+        * Spark executor: Each worker runs within its own
+          pod
+        * Cluster manager: Kubernetes Master
 * Distributed data and partitions
     * Actual physical data is distributed across storage as partitions residing in either HDFS
       or cloud storage

@@ -184,120 +184,26 @@
         * default and preferred data source for Spark
         * files are stored in a directory structure that contains the data files, metadata,
           a number of compressed files, and some status files
-## sql
-* SQL Tables and Views
-    * each table is Associated with its relevant metadata (the schema, partitions, physical location 
-      where the actual data resides, etc.
-        * All of this is stored in a central metastore.
-    * Instead of having a separate metastore for Spark tables, Spark by default uses the
-      Apache Hive metastore, located at /user/hive/warehouse, to persist all the metadata
-      about your tables.
-* Managed Versus UnmanagedTables
-    * Spark allows you to create two types of tables: managed and unmanaged
-    * For a man‐
-      aged table, Spark manages both the metadata and the data in the file store. This could
-      be a local filesystem, HDFS, or an object store such as Amazon S3 or Azure Blob.
-    * an unmanaged table, Spark only manages the metadata, while you manage the data
-      yourself in an external data source such as Cassandra.
-    * With a managed table, because Spark manages everything, a SQL command such as
-      DROP TABLE table_name deletes both the metadata and the data.
-        * With an unmanaged
-          table, the same command will delete only the metadata, not the actual data.
-  * Tables reside within a database. By default, Spark creates tables under the default
-    database.
-    * Spark can create views on top of existing tables
-      * The difference between a view and a
-        table is that views don’t actually hold the data; tables persist after your Spark applica‐
-        tion terminates, but views disappear.   
-* Viewing the Metadata
-    * as mentioned previously, Spark manages the metadata associated with each managed
-      or unmanaged table.
-        * This is captured in the Catalog , a high-level abstraction in
-          Spark SQL for storing metadata.
-    * spark.catalog.listDatabases()
-      spark.catalog.listTables()
-      spark.catalog.listColumns("us_delay_flights_tbl")        
-* To enable a table-like SQL usage in Spark, you have to create a view.
-    * The scope can be local (to the session) as you just did, or global (to the application)
-    ```      
-    df.createOrReplaceTempView("geodata");
-  
-    Dataset<Row> smallCountries = spark.sql("SELECT * FROM geodata WHERE yr1980 < 1 ORDER BY 2 LIMIT 5");
-    ```  
-* 11.2 The difference between local and global views
-    * Whether you are using a local or global view, views are only temp (for temporary).
-        * When the session ends, the local views are removed; when all sessions end, the global
-          views are removed.
-    * As you create a new session, your data is still available in both sessions, and this is
-      where you can use global views.
-    * running multiple sessions is not a common case
-* 11.5 Going further with SQL
-    * The SparkSession.table() method is worth mentioning.
-        * The method returns the specified view as a dataframe, directly from the session, enabling
-          you to avoid passing references to the dataframe itself.
-# data transformation
-        * union() or unionByName()
-              * union() method does not care about the names of the columns, just their order
-              * unionByName() matches columns by names, which is safer
-* Transformations, Actions, and Lazy Evaluation
-    * Spark operations on distributed data can be classified into two types: transformations
-      and actions
-    * Transformations, as the name suggests, transform a Spark DataFrame
-      into a new DataFrame without altering the original data, giving it the property of
-      immutability
-        * Put another way, an operation such as select() or filter() will not
-          change the original DataFrame; instead, it will return the transformed results of the
-          operation as a new DataFrame.
-    * All transformations are evaluated lazily.
-        * That is, their results are not computed imme‐
-          diately, but they are recorded or remembered as a lineage.
-            * A recorded lineage allows
-              Spark, at a later time in its execution plan, to rearrange certain transformations, coa‐
-              lesce them, or optimize transformations into stages for more efficient execution.
-                * Lazy
-                  evaluation is Spark’s strategy for delaying execution until an action is invoked or data
-                  is “touched” (read from or written to disk).
-            * An action triggers the lazy evaluation of all the recorded transformations
-    * While lazy evaluation allows Spark to optimize your queries by peeking into your
-      chained transformations, lineage and data immutability provide fault tolerance.
-        * Because Spark records each transformation in its lineage and the DataFrames are
-          immutable between transformations, it can reproduce its original state by simply
-          replaying the recorded lineage, giving it resiliency in the event of failures.
-    * Transformations Actions
-      orderBy() show()
-      groupBy() take()
-      filter() count()
-      select() collect()
-      join() save()
-* Narrow and Wide Transformations
-    * Transformations can be classified as having either narrow dependencies or wide
-      dependencies. Any transformation where a single output partition can be computed
-      from a single input partition is a narrow transformation. For example, in the previous
-      code snippet, filter() and contains() represent narrow transformations because
-      they can operate on a single partition and produce the resulting output partition
-      without any exchange of data.
-    * However, groupBy() or orderBy() instruct Spark to perform wide transformations,
-      where data from other partitions is read in, combined, and written to disk
-* 12.1 What is data transformation?
-    * Data transformation is the process of converting data from one format or structure into
-      another
-    * Data can be of several types:
-        * Data can be structured and well organized, like tables and columns in relational databases.
-        * Data can be in the form of documents, in a semistructured way.
-            * Those documents are often seen in NoSQL databases.
-        * Data can be raw, completely unstructured, like a binary large object (blob) or document.
-    * Transformations can apply to several aspects of the data:
-        * At the record level: you can modify the values directly in the record (or row).
-        * At the column level: you can create and drop columns in the dataframe.
-        * In the metadata/structure of the dataframe.
-* Performance is not affected negatively by using an intermediate dataframe.
-    * Performance can be boosted if you cache or checkpoint the data
-    * What’s the point of caching when everything is in memory?
-        * If you plan on reusing a dataframe for different analyses, it is a good idea to cache
-          your data by using the cache() method.
-        * It will increase performance.
-    * The data preparation steps are executed each time you run an analytics pipeline; this can be
-      optimized by using the cache() method.
+## data transformation
+* operations can be classified into two types
+    * transformations
+        * `DataFrame -> DataFrame`
+        * example: `select()`, `filter()`
+        * evaluated lazily
+            * action triggers evaluation
+            * results are not computed immediately, but they are recorded or remembered as a lineage
+                * allows Spark to optimize queries (rearrange certain transformations, coalesce them, etc.)
+                * provides fault tolerance: can reproduce its original state by simply replaying the 
+                  recorded lineage
+        * two types
+            * narrow
+                * single output partition is computed from a single input partition
+                * example: `filter()`, `contains()`
+            * wide
+                * data from other partitions is read in, combined, and written to disk
+                * example: `groupBy()`, `orderBy()`
+    * actions
+        * example: `count()`, `save()`
 * 13.1.1 Flattening your JSON document
     * you will practice flattening a JSON document: trans-
       forming JSON and its hierarchical data elements into tabular formats
@@ -375,6 +281,14 @@
     Dataset<Row> sqlDf = spark.sql(sqlStatement);
     ```
 # performance
+* Performance is not affected negatively by using an intermediate dataframe.
+    * Performance can be boosted if you cache or checkpoint the data
+    * What’s the point of caching when everything is in memory?
+        * If you plan on reusing a dataframe for different analyses, it is a good idea to cache
+          your data by using the cache() method.
+        * It will increase performance.
+    * The data preparation steps are executed each time you run an analytics pipeline; this can be
+      optimized by using the cache() method.
     * What is the difference between caching and persistence? 
       * In Spark they are synonymous
     * Two API calls, cache() and persist() , offer these capabilities
@@ -621,4 +535,39 @@
 * Phase 3: Physical planning
     * Spark SQL generates an optimal physical plan for the selected logical plan
 * Phase 4: Code generation
-    * generating efficient Java bytecode to run on each machine          
+    * generating efficient Java bytecode to run on each machine
+## sql
+* tables
+    ```
+    ids.write.
+      option("path", "/tmp/five_ids").
+      saveAsTable("five_ids")
+    ```
+    * each table is associated with its relevant metadata (the schema, partitions, physical location
+      where the actual data resides, etc.)
+        * all metadata is stored in a central metastore
+            * by default: Apache Hive metastore
+                * Catalog is the interface for managing a metastore
+                    * spark.catalog.listDatabases()
+                    * spark.catalog.listTables()
+                    * spark.catalog.listColumns("us_delay_flights_tbl")
+                * location: /user/hive/warehouse
+    * two types of tables
+        * managed
+            * Spark manages metadata and the data
+            * example: local filesystem, HDFS, Amazon S3
+            * note that SQL command such as DROP TABLE deletes both the metadata and the data
+                * with an unmanaged table, the same command will delete only the metadata
+        * unmanaged
+            * Spark only manages the metadata
+            * example: Cassandra
+    * reside within a database
+* views
+    * vs table: views don’t actually hold the data
+        * tables persist after application terminates, but views disappear
+    * to enable a table-like SQL usage in Spark - create a view
+        ```      
+        df.createOrReplaceTempView("geodata");
+      
+        Dataset<Row> smallCountries = spark.sql("SELECT * FROM ...");
+        ```      

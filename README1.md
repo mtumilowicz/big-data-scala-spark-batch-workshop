@@ -39,7 +39,7 @@
             * accessing catalog metadata
             * issuing Spark SQL queries
     * Spark driver
-        * process running the main() function of the application
+        * process running the `main()` function of the application
         * instantiates SparkSession
         * communicates with the cluster manager
         * requests resources (CPU, memory, etc.) from the cluster manager for Spark’s executors (JVMs)
@@ -81,71 +81,17 @@
         * example: join and any operation that ends with ByKey will trigger a Shuffle
     * Partition
         * data is split into Partitions so that each Executor can operate on a single part, enabling parallelization
-* Deployment modes
-    * Because the cluster man‐
-      ager is agnostic to where it runs (as long as it can manage Spark’s executors and
-      fulfill resource requests), Spark can be deployed in some of the most popular envi‐
-      ronments—such as Apache Hadoop YARN and Kubernetes—and can operate in dif‐
-      ferent modes
-    * Mode: Local
-        * Spark driver: Runs on a single JVM, like a
-          laptop or single node
-        * Spark executor: Runs on the same JVM as the
-          driver
-        * Cluster manager: Runs on the same host
-    * Mode: Kubernetes
-        * Spark driver: Runs in a Kubernetes pod
-        * Spark executor: Each worker runs within its own
-          pod
-        * Cluster manager: Kubernetes Master
-* Distributed data and partitions
-    * Actual physical data is distributed across storage as partitions residing in either HDFS
-      or cloud storage
-    * While the data is distributed as partitions across the
-      physical cluster, Spark treats each partition as a high-level logical data abstraction—as
-      a DataFrame in memory
-    * Though this is not always possible, each Spark executor is
-      preferably allocated a task that requires it to read the partition closest to it in the net‐
-      work, observing data locality.    
-* 1.2.1 Spark in a data processing/engineering scenario
-    * excels when it plays in a big data scenario, where you ingest data, clean it, transform it, and republish it
-    * The four steps of a typical Spark (big data) scenario performed by data engineering are as follows:
-      1 Ingestion
-      1 Improvement of data quality (DQ)
-      1 Transformation
-      1 Publication
-    * Spark in a typical data processing scenario.
-        * The first step is ingesting the data.
-            * At this stage, the data is raw; you may next want to apply some data quality (DQ).
-        * You are now ready to transform your data.
-            * Once you have transformed your data, it is richer.
-        * It is time to publish or share it so people in your organization can perform actions
-          on it and make decisions based on it.
-    * The process includes four steps, and after each step, the data lands in a zone:
-      1 Ingesting data
-        * Spark can ingest data from a variety of sources
-        * If you can’t find a supported format, you can build your own data sources.
-        * I call data at this stage raw data.
-        * You can also find this zone named the staging, landing, bronze, or even swamp zone.
-          1 Improving data quality (DQ)
-        * Before processing your data, you may want to check the quality of the data itself.
-        * An example of DQ is to ensure that all birth dates are in the past.
-        * As part of this process, you can also elect to obfuscate some data: if you
-          are processing Social Security numbers (SSNs) in a health-care environment, you
-          can make sure that the SSNs are not accessible to developers or nonauthorized
-          personnel.
-        * After your data is refined, I call this stage the pure data zone.
-        * You may also find this zone called the refinery, silver, pond, sandbox, or exploration zone.
-          1 Transforming data
-        * The next step is to process your data.
-        * You can join it with other datasets, apply custom functions, perform aggregations, implement
-          machine learning, and more.
-        * The goal of this step is to get rich data, the fruit of your analytics work.
-        * This zone may also be called the production, gold, refined, lagoon, or operationalization zone.
-          1 Loading and publishing
-        * As in an ETL process, 5 you can finish by loading the data into a data warehouse, using
-          a business intelligence (BI) tool, calling APIs, or saving the data in a file
-        * The result is actionable data for your enterprise.
+* example: four steps of a typical Spark scenario
+    1 Ingestion
+        * at this stage, the data is raw
+    1 Improvement of data quality (DQ)
+        * example: ensure that all birth dates are in the past
+        * example: obfuscate Social Security numbers (SSNs)
+    1 Transformation
+        * example: join with other datasets, perform aggregations
+    1 Publication
+        * people in your organization can perform actions on it and make decisions based on it
+        * example: load the data into a data warehouse, save in a file on S3
 # components overview
 * Step 3: Understanding Spark Application Concepts
     * Application
@@ -827,6 +773,23 @@
       database, and write the data into cloud storage (for example, Amazon S3)
 
 ## deployment
+* Deployment modes
+    * Because the cluster man‐
+      ager is agnostic to where it runs (as long as it can manage Spark’s executors and
+      fulfill resource requests), Spark can be deployed in some of the most popular envi‐
+      ronments—such as Apache Hadoop YARN and Kubernetes—and can operate in dif‐
+      ferent modes
+    * Mode: Local
+        * Spark driver: Runs on a single JVM, like a
+          laptop or single node
+        * Spark executor: Runs on the same JVM as the
+          driver
+        * Cluster manager: Runs on the same host
+    * Mode: Kubernetes
+        * Spark driver: Runs in a Kubernetes pod
+        * Spark executor: Each worker runs within its own
+          pod
+        * Cluster manager: Kubernetes Master
 * The following is a nonexhaustive list of the main resource managers:
     * The built-in Spark resource manager
     * YARN

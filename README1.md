@@ -149,12 +149,17 @@
         * DDL: `val schema = "author STRING, title STRING, pages INT"`
 
 ## data import / export
+* A data source could be any of the following:
+    * A file (CSV, JSON, XML, Avro, Parquet, and ORC, etc)
+    * A relational and nonrelational database
+    * other data provider: (REST) service, etc
 * DataFrameReader
     * core construct for reading data into a DataFrame from myriad
       data sources in formats such as JSON, CSV, Parquet, Text, Avro, ORC, etc.
     * can only be accessed through a SparkSession instance
 * DataFrameWriter
     * it saves or writes data to a specified built-in data source
+    
 ### file formats
 * problem with traditional file formats
     * JSON and XML are not easy to split and big data files need to be splittable
@@ -179,27 +184,10 @@
         * default and preferred data source for Spark
         * files are stored in a directory structure that contains the data files, metadata,
           a number of compressed files, and some status files
-## ingestion from databases
-* 9.1 What is a data source?
-    * A data source provides data to Spark.
-    * Once data is ingested in Spark from this data
-      source, all the traditional data processing (transformations, machine learning, and
-      more) can start
-    * A data source could be any of the following:
-        * A file (CSV, JSON, XML, and more, as you saw in chapter 7)
-        * Other file formats including Avro, Parquet, and ORC (defined in chapter 7)
-        * A relational database (as you saw in chapter 8)
-        * A nonrelational database such as Elasticsearch (also covered in chapter 8)
-        * Any other data provider: a representational state transfer (REST) service, unsupported file formats, and so on
-    * Spark will store the data and schema in the dataframe.
-        * The “guy” in charge of reading and creating the dataframe is the dataframe reader.
-        * However, the reader needs to have a way to communicate with the data source itself
-# sql
+## sql
 * SQL Tables and Views
-    * Associated with each table in Spark is its relevant metadata, which is
-      information about the table and its data: the schema, description, table name, data‐
-      base name, column names, partitions, physical location where the actual data resides,
-      etc.
+    * each table is Associated with its relevant metadata (the schema, partitions, physical location 
+      where the actual data resides, etc.
         * All of this is stored in a central metastore.
     * Instead of having a separate metastore for Spark tables, Spark by default uses the
       Apache Hive metastore, located at /user/hive/warehouse, to persist all the metadata

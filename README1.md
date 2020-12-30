@@ -14,6 +14,8 @@
     * https://sparkbyexamples.com/spark/spark-sql-dataframe-join/
     * https://towardsdatascience.com/write-clean-and-solid-scala-spark-jobs-28ac4395424a
     * https://www.edureka.co/blog/spark-architecture/
+    * https://spark.apache.org/docs/latest/cluster-overview.html
+    * https://queirozf.com/entries/apache-spark-architecture-overview-clusters-jobs-stages-tasks
 
 ## preface
 
@@ -37,12 +39,15 @@
             * accessing catalog metadata
             * issuing Spark SQL queries
     * Spark driver
+        * process running the main() function of the application
         * instantiates SparkSession
         * communicates with the cluster manager
         * requests resources (CPU, memory, etc.) from the cluster manager for Spark’s executors (JVMs)
         * transforms operations into DAG computations and schedules them
         * distributes operations execution as tasks across the Spark executors
+            * does not run computations (filter,map, reduce, etc)
         * once the resources are allocated, it communicates directly with the executors
+        * resides on master node
     * Cluster manager
         * manages and allocates resources for the cluster of nodes on which your Spark application runs
         * supports four cluster managers
@@ -50,11 +55,32 @@
             * Apache Hadoop YARN
             * Apache Mesos
             * Kubernetes
+    * Worker node
+        * any node that can run application code in the cluster
     * Spark executor
         * runs on each worker node in the cluster
             * only a single executor runs per node
         * communicates with the driver program
         * executes tasks on the workers
+    * Job
+        * parallel computation consisting of multiple tasks that gets spawned in response 
+          to a Spark action (e.g. save, collect)
+        * is a sequence of Stages, triggered by an action (ex. `.count()`) 
+    * Stage
+        * a sequence of Tasks that can all be run together, in parallel, without a shuffle
+        * example: using `.read.map.filter` can all be done without a shuffle, so it can fit in a single stage
+    * Task
+        * unit of work that will be sent to one executor
+        * is a single operation (ex. `.map` or `.filter`) applied to a single Partition
+        * each Task is executed as a single thread in an Executor
+        * example: if your dataset has 2 Partitions, an operation such as a `filter()` will trigger 2 Tasks, 
+          one for each Partition
+    * Shuffle
+        * operation where data is re-partitioned across a Cluster
+        * costly operation because a lot of data can be sent via the network
+        * example: join and any operation that ends with ByKey will trigger a Shuffle
+    * Partition
+        * data is split into Partitions so that each Executor can operate on a single part, enabling parallelization
 * Deployment modes
     * Because the cluster man‐
       ager is agnostic to where it runs (as long as it can manage Spark’s executors and

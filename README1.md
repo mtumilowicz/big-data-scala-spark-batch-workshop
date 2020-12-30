@@ -16,6 +16,8 @@
     * https://www.edureka.co/blog/spark-architecture/
     * https://spark.apache.org/docs/latest/cluster-overview.html
     * https://queirozf.com/entries/apache-spark-architecture-overview-clusters-jobs-stages-tasks
+    * https://data-flair.training/blogs/apache-spark-rdd-vs-dataframe-vs-dataset/
+    * https://medium.com/@venkat34.k/the-three-apache-spark-apis-rdds-vs-dataframes-and-datasets-4caf10e152d8
 
 ## preface
 
@@ -93,107 +95,55 @@
         * example: join and any operation that ends with ByKey will trigger a Shuffle
     * Partition
         * data is split into Partitions so that each Executor can operate on a single part, enabling parallelization
-
-# dataframe
-* Dataset Encoders
-    * Encoders convert data in off-heap memory from Spark’s internal Tungsten format to
-      JVM Java objects
-    *  In other words, they serialize and deserialize Dataset objects from
-       Spark’s internal format to JVM objects, including primitive data types
-    * Spark has built-in support for automatically generating encoders for primitive types
-      (e.g., string, integer, long), Scala case classes, and JavaBeans
-    * for Scala, Spark automatically generates the bytecode for these efficient
-      converters
-    * Spark’s Internal Format Versus Java Object Format
-        * Java objects have large overheads—header info, hashcode, Unicode info, etc.
-        * Instead of creating JVM-based objects for Datasets or DataFrames, Spark allocates
-          off-heap Java memory to lay out their data and employs encoders to convert the data
-          from in-memory representation to JVM object
-    * Serialization and Deserialization (SerDe)
-        * serialization and deserialization is the
-          process by which a typed object is encoded (serialized) into a binary presentation or
-          format by the sender and decoded (deserialized) from binary format into its respec‐
-          tive data-typed object by the receiver
-* Converting DataFrames to Datasets
-    * val bloggersDS = spark
-      .read
-      .format("json")
-      .option("path", "/data/bloggers/bloggers.json")
-      .load()
-      .as[Bloggers]
-* The Dataset API
-    * Datasets take on two characteristics: typed and untyped APIs
-    * Conceptually, you can think of a DataFrame in Scala as an alias for a collection of
-      generic objects, Dataset[Row] , where a Row is a generic untyped JVM object that may
-      hold different types of fields. A Dataset, by contrast, is a collection of strongly typed
-      JVM objects in Scala or a class in Java
-    * Dataset is:
-      a strongly typed collection of domain-specific objects that can be transformed in paral‐
-      lel using functional or relational operations. Each Dataset [in Scala] also has an unty‐
-      ped view called a DataFrame, which is a Dataset of Row
-* The DataFrame API
-    * Inspired by pandas DataFrames in structure, format, and a few specific operations,
-      Spark DataFrames are like distributed in-memory tables with named columns and
-      schemas, where each column has a specific data type: integer, string, array, map, real,
-      date, timestamp, etc.
-    * To a human’s eye, a Spark DataFrame is like a table
-* Schemas and Creating DataFrames
-    * A schema in Spark defines the column names and associated data types for a DataFrame
-    * Defining a schema
-      up front as opposed to taking a schema-on-read approach offers three benefits:
-      • You relieve Spark from the onus of inferring data types.
-      • You prevent Spark from creating a separate job just to read a large portion of
-      your file to ascertain the schema, which for a large data file can be expensive and
-      time-consuming.
-      • You can detect errors early if data doesn’t match the schema.
-    * Two ways to define a schema
-      * Spark allows you to define a schema in two ways. One is to define it programmati‐
-      cally, and the other is to employ a Data Definition Language (DDL) string, which is
-      much simpler and easier to read.
-        * val schema = StructType(Array(StructField("author", StringType, false), // programmatically
-        * val schema = "author STRING, title STRING, pages INT" // DDL    
+        * example: ingesting the CSV file in a distributed way
+            * file must be on a shared drive, distributed filesystem (like HDFS), or shared
+              filesystem mechanism such as Dropbox
+            * workers will create tasks to read the file
+                * worker will assign a memory partition to the task
+                * task will read a part of the CSV file and stores them in a dedicated partition
+        * why should you care?
+            * joining data from the first partition of worker 1 with data in the second partition of worker 2
+                * all that data will have to be transferred, which is a costly operation
+            * solution: repartition the data
+## data representation
+* Spark’s Internal Format Versus Java Object Format
+    * Java objects have large overheads—header info, hashcode, Unicode info, etc.
+    * Instead of creating JVM-based objects for Datasets or DataFrames, Spark allocates
+      off-heap Java memory to lay out their data and employs encoders to convert the data
+      from in-memory representation to JVM object
+* RDD (Resilient Distributed Datasets)
+    * fundamental data structure of Spark
+    * immutable distributed collection of data
+* Dataset
+    * take on two characteristics: typed and untyped APIs
+    * think of a DataFrame in Scala as an alias for a collection of generic objects, `Dataset[Row]`
+        * Row is a generic untyped JVM object that may hold different types of fields
+        * DataFrames are like distributed in-memory tables with named columns and
+          schemas, where each column has a specific data type: integer, string, array, map, etc
+            * there are no primary or foreign keys or indexes in Spark
+            * data can be nested, as in a JSON or XML document
+        * get first column of given row: `val name = row.getString(0)`
+    * Dataset is a collection of strongly typed JVM objects
+        * has also an untyped view called a DataFrame, which is a Dataset of Row
+    * Converting DataFrames to Datasets
+        ```
+        val bloggersDS = spark
+          .read
+          .json("path")
+          .load()
+          .as[TargetClass]
+        ```
+* schemas
+    * defines the column names and associated data types for a DataFrame
+    * defining vs inferring a schema
+        * no inferring data types
+        * no separate job just to read a large portion of file to ascertain the schema
+            * for a large data file can be expensive and time-consuming
+        * early errors detection if data doesn’t match the schema
+    * ways to define a schema
+        * programmatically: `val schema = StructType(Array(StructField("author", StringType, false)`
+        * DDL: `val schema = "author STRING, title STRING, pages INT"`
 * 1.4 Why you will love the dataframe
-    * 1.4.1 The dataframe from a Java perspective
-        * the dataframe will look like a ResultSet
-        * Similarities between a ResultSet and a dataframe are as follows:
-            * Data is accessible through a simple API.
-            * You can access the schema.
-        * Here are some differences:
-            * You do not browse through it with a next() method.
-            * Its API is extensible through user-defined functions (UDFs).
-                * You can write or wrap existing code and add it to Spark.
-                * This code will then be accessible in a distributed mode.
-            * If you want to access the data, you first get the Row and then go through the columns of the row
-              with getters (similar to a ResultSet ).
-            * Metadata is fairly basic, as there are no primary or foreign keys or indexes in Spark.
-    * 1.4.2 The dataframe from an RDBMS perspective
-        * a dataframe is like a table
-        * similarities:
-            * Data is described in columns and rows.
-            * Columns are strongly typed.
-        * Here are some differences:
-            * Data can be nested, as in a JSON or XML document.
-            * You don’t update or delete entire rows; you create new dataframes.
-            * You can easily add or remove columns.
-            * There are no constraints, indices, primary or foreign keys, or triggers on the dataframe.
-      * 2.3.2 Loading, or ingesting, the CSV file
-        ![alt text](img/spark/flow.png)
-          * The R > P symbol indicates that you are loading records in the partition,
-          * and the P > D symbol indicates that you are copying the data in the partition to the database
-      * Spark can use distributed ingestion through the various nodes of the cluster.
-      * Spark relies on slaves, or workers
-      * Spark will ingest the CSV file in a distributed way
-          * file must be on a shared drive, distributed filesystem (like HDFS), or shared via a shared
-            filesystem mechanism such as Dropbox, Box, Nextcloud, or ownCloud
-          * The workers will create tasks to read the file.
-              * Each worker has access to the node’s memory and will assign a memory partition to the task
-              * each task will continue by reading a part of the CSV file
-                  * As the task is ingesting its rows, it stores them in a dedicated partition
-      * Why should you care about partitions and their locations?
-          * Now imagine that you are joining data from the first partition of
-            worker 1 with data in the second partition of worker 2: all that data will have to be
-            transferred, which is a costly operation.
-          * You can repartition the data, which can make your applications more efficient
         * 3.1.1 Organization of a dataframe
         * the dataframe is implemented as a dataset of rows ( Dataset<Row> ).
             * Each column is named and typed.
@@ -216,7 +166,9 @@
                   part of Apache Spark that focuses on enhancing three key areas: memory manage-
                   ment and binary processing, cache-aware computation, and code generation        
 
-# catalyst
+## optimizations
+### tungsten
+### catalyst
 * Spark SQL and the Underlying Engine
     * At the core of the Spark SQL engine are the Catalyst optimizer and Project Tungsten.
     * The Catalyst Optimizer

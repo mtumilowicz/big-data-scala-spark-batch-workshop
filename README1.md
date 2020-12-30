@@ -114,10 +114,12 @@
 * RDD (Resilient Distributed Datasets)
     * fundamental data structure of Spark
     * immutable distributed collection of data
+        * data itself is in partitions
 * Dataset
     * take on two characteristics: typed and untyped APIs
     * think of a DataFrame in Scala as an alias for a collection of generic objects, `Dataset[Row]`
         * Row is a generic untyped JVM object that may hold different types of fields
+            * uses efficient storage called Tungsten
         * DataFrames are like distributed in-memory tables with named columns and
           schemas, where each column has a specific data type: integer, string, array, map, etc
             * there are no primary or foreign keys or indexes in Spark
@@ -139,68 +141,29 @@
         * no inferring data types
         * no separate job just to read a large portion of file to ascertain the schema
             * for a large data file can be expensive and time-consuming
-        * early errors detection if data doesn’t match the schema
+        * errors detection if data doesn’t match the schema
     * ways to define a schema
         * programmatically: `val schema = StructType(Array(StructField("author", StringType, false)`
         * DDL: `val schema = "author STRING, title STRING, pages INT"`
-* 1.4 Why you will love the dataframe
-        * 3.1.1 Organization of a dataframe
-        * the dataframe is implemented as a dataset of rows ( Dataset<Row> ).
-            * Each column is named and typed.
-            * The data itself is in partitions
-            * Dataframes include the schema in a form of StructType , which can be used for
-              introspection.
-            * Dataframes also include a printSchema() method to more quickly
-              debug your dataframes.
-  * 3.1.2 Immutability is not a swear word
-      * Dataframes, as well as datasets and RDDs, are considered immutable storage
-      * Spark stores the initial state of the data, in an immutable way, and then keeps the recipe
-        (a list of the transformations).
-          * The intermediate data is not stored
-        * union() or unionByName()
-              * union() method does not care about the names of the columns, just their order
-              * unionByName() matches columns by names, which is safer  
-          * The dataframe is a Dataset<Row>
-            * a Row uses efficient storage called Tungsten
-                * Project Tungsten is an integrated
-                  part of Apache Spark that focuses on enhancing three key areas: memory manage-
-                  ment and binary processing, cache-aware computation, and code generation        
 
 ## optimizations
+* at the core of the Spark SQL engine are the Catalyst optimizer and Project Tungsten.
 ### tungsten
+* focuses on enhancing three key areas: memory management and binary processing, cache-aware 
+  computation, and code generation
 ### catalyst
-* Spark SQL and the Underlying Engine
-    * At the core of the Spark SQL engine are the Catalyst optimizer and Project Tungsten.
-    * The Catalyst Optimizer
-      ![alt text](img/spark/computational_phases.png)
-        * The Catalyst optimizer takes a computational query and converts it into an execution
-          plan
-        * scala: df.queryExecution.logical or df.queryExecution.optimizedPlan
-        * Phase 1: Analysis
-            * The Spark SQL engine begins by generating an abstract syntax tree (AST) for the SQL
-              or DataFrame query
-        * Phase 2: Logical optimization
-          * Applying a standard-
-          rule based optimization approach, the Catalyst optimizer will first construct a set of
-          multiple plans and then, using its cost-based optimizer (CBO), assign costs to each
-          plan
-          * they may include,
-          for example, the process of constant folding, predicate pushdown, projection prun‐
-          ing, Boolean expression simplification, etc.
-        * Phase 3: Physical planning
-            * Spark SQL generates an optimal physical plan for the selected logical
-              plan, using physical operators that match those available in the Spark execution
-              engine.
-        * Phase 4: Code generation
-            * generating efficient Java bytecode to
-              run on each machine
-            * Project Tungsten, which facilitates
-              whole-stage code generation, plays a role here.
-                * Just what is whole-stage code generation? It’s a physical query optimization phase that
-                  collapses the whole query into a single function, getting rid of virtual function calls
-                  and employing CPU registers for intermediate data.
-* Finally, you will have a deeper look at Catalyst, Spark’s built-in optimizer.
-    * Like an RDBMS query optimizer, it can dump the query plan, which is useful for debugging.
+* like an RDBMS query optimizer
+* converts computational query and converts it into an execution plan
+    ![alt text](img/optimization.jpg)
+* Phase 1: Analysis
+    * Spark SQL engine generates AST tree for the SQL or DataFrame query
+* Phase 2: Logical optimization
+    * Catalyst optimizer will construct a set of multiple plans and then, using its cost-based 
+      optimizer (CBO), assign costs to each plan
+* Phase 3: Physical planning
+    * Spark SQL generates an optimal physical plan for the selected logical plan
+* Phase 4: Code generation
+    * generating efficient Java bytecode to run on each machine
 
 # job      
 * What do I mean by recipe? Is it a job?
@@ -464,6 +427,9 @@
         * The method returns the specified view as a dataframe, directly from the session, enabling
           you to avoid passing references to the dataframe itself.
 # data transformation
+        * union() or unionByName()
+              * union() method does not care about the names of the columns, just their order
+              * unionByName() matches columns by names, which is safer
 * Transformations, Actions, and Lazy Evaluation
     * Spark operations on distributed data can be classified into two types: transformations
       and actions

@@ -148,117 +148,37 @@
         * programmatically: `val schema = StructType(Array(StructField("author", StringType, false)`
         * DDL: `val schema = "author STRING, title STRING, pages INT"`
 
-# ingestion
-* Data Sources for DataFrames and SQL Tables
-    * DataFrameReader
-        * is the core construct for reading data from a data source into a
-          DataFrame
-        * DataFrameReader.format(args).option("key", "value").schema(args).load()
-        * you can only access a DataFrameReader through a SparkSession instance
-            * That is, you cannot create an instance of DataFrameReader
-            * SparkSession.read
-              // or
-              SparkSession.readStream
-            * read returns a handle to DataFrameReader to read into a DataFrame from a
-              static data source, readStream returns an instance to read from a streaming source.
-        * In general, no schema is needed when reading from a static Parquet
-          data source—the Parquet metadata usually contains the schema, so
-          it’s inferred.
-            * Parquet is the default and preferred data source for Spark because
-              it’s efficient, uses columnar storage, and employs a fast compres‐
-              sion algorithm.
-    * DataFrameWriter
-        * it saves or writes data to a speci‐
-          fied built-in data source
-        * you access its instance not
-          from a SparkSession but from the DataFrame you wish to save
-        * DataFrameWriter.format(args)
-          .option(args)
-          .bucketBy(args)
-          .partitionBy(args)
-          .save(path)
-        * DataFrameWriter.format(args).option(args).sortBy(args).saveAsTable(table)
-        * To get an instance handle, use:
-          DataFrame.write
-          // or
-          DataFrame.writeStream
-    * Spark provides an inter‐
-      face, DataFrameReader , that enables you to read data into a DataFrame from myriad
+## data import / export
+* DataFrameReader
+    * core construct for reading data into a DataFrame from myriad
       data sources in formats such as JSON, CSV, Parquet, Text, Avro, ORC, etc.
-    * to write a DataFrame back to a data source in a particular format, Spark uses
-      DataFrameWriter
-* Note that CSV has become a generic term: nowadays, the C means character more than comma.
-    * You will find files in which values are separated by semicolons, tabs, pipes ( | ), and more
-* Starting with v2.2, Spark can ingest more-complex JSON files and is not constrained
-  to the JSON Lines format
-    ```
-    Dataset<Row> df = spark.read()
-        .format("json")
-        .option("multiline", true) // key to processing multiline JSON!
-        .load("data/countrytravelinfo.json");
-    ```
-* 7.8 File formats for big data
-    * Big data brings its own set of file formats: Avro, ORC, or Parquet
-    * 7.8.1 The problem with traditional file formats
-        * "So why can’t I just use JSON, XML, or CSV?" Here are some reasons:
-            * JSON and XML (and in some measure CSV) are not easy to split.
-                * When you want your nodes to read a part of the file, it’s easier if you can split it.
-                * Node 1 will read the first 5,000 records, node 2 the second 5,000, and so on.
-                * Because of its root element, XML will need rework, which may break the document.
-                * Big data files need to be splittable.
-            * CSV cannot store hierarchical information as JSON or XML can.
-            * None are designed to incorporate metadata.
-            * None of these formats support easy column addition, deletion, or insertion
-              (although you will probably not need those operations, as Spark will do them).
-            * These formats are all quite verbose (especially JSON and XML), which inflates
-              the file size drastically.
-    * 7.8.2 Avro is a schema-based serialization format
-        * Apache Avro is a data serialization system, which provides rich data structures in a
-          compact, fast, and binary data format.
-        * Avro was designed for remote procedure calls (RPCs) in a similar way as Protocol Buf-
-          fers (Protobuf), a popular method for transferring serializable data developed and open
-          sourced by Google
-        * Avro supports dynamic modification of the schema.
-            * Avro offers a schema, written in JSON.
-        * Because an Avro file is row-based, the file is easier to split
-    * 7.8.3 ORC is a columnar storage format
-        * Beyond the standard datatypes, ORC supports compound types including structs,
-          lists, maps, and unions.
-        * ORC supports compression, which reduces file size and net-
-          work transfer time (always a bonus for big data).
-    * 7.8.4 Parquet is also a columnar storage format
-        * Parquet supports compression, and you can add columns at the end of the schema.
-        * Parquet also supports compound types such as lists and maps.
-            * If the DataFrame is written as Parquet, the
-              schema is preserved as part of the Parquet metadata.
-      * In this case, subsequent reads
-        back into a DataFrame do not require you to manually supply a schema.
-    * 7.8.5 Comparing Avro, ORC, and Parquet
-        * Based on popularity, if you have a choice to make, Parquet is probably the way to go.
-* Parquet
-    * it’s the default data
-      source in Spark
-    * is an open source columnar file format that offers many I/O
-      optimizations (such as compression, which saves storage space and allows for quick
-      access to data columns).
-    * we recommend that after you have
-      transformed and cleansed your data, you save your DataFrames in the Parquet format
-      for downstream consumption
-    * Reading Parquet files into a DataFrame
-        * Parquet files are stored in a directory structure that contains the data files, metadata,
-          a number of compressed files, and some status files.
-        * Metadata in the footer contains
-          the version of the file format, the schema, and column data such as the path, etc
-    * Reading Parquet files into a Spark SQL table
-    * Writing DataFrames to Parquet files
-        * df.write.format("parquet")
-          .mode("overwrite")
-          .option("compression", "snappy")
-          .save("/tmp/data/parquet/df_parquet")
-    * Writing DataFrames to Spark SQL tables
-        * df.write
-          .mode("overwrite")
-          .saveAsTable("us_delay_flights_tbl")
+    * can only be accessed through a SparkSession instance
+* DataFrameWriter
+    * it saves or writes data to a specified built-in data source
+### file formats
+* problem with traditional file formats
+    * JSON and XML are not easy to split and big data files need to be splittable
+    * CSV cannot store hierarchical information as JSON or XML can
+    * none are designed to incorporate metadata.
+    * formats are quite verbose (especially JSON and XML), which inflates the file size drastically
+* big data brings its own set of file formats: Avro, ORC, or Parquet   
+    * Avro 
+        * schema-based serialization format (binary data)
+        * supports dynamic modification of the schema
+        * is row-based, so easier to split
+    * ORC 
+        * columnar storage format
+        * supports compression
+    * Parquet 
+        * columnar storage format
+        * supports compression
+        * add columns at the end of the schema
+        * Parquet metadata usually contains the schema
+            * if the DataFrame is written as Parquet, the schema is preserved as part of the Parquet metadata
+              * subsequent reads do not require you supply a schema
+        * default and preferred data source for Spark
+        * files are stored in a directory structure that contains the data files, metadata,
+          a number of compressed files, and some status files
 ## ingestion from databases
 * 9.1 What is a data source?
     * A data source provides data to Spark.

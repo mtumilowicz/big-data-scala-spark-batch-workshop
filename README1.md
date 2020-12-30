@@ -52,12 +52,14 @@
             * writing to data lakes
             * accessing catalog metadata
             * issuing Spark SQL queries
+        * there is a unique SparkSession for your application, whether you are in local mode or have 10,000 nodes
     * Spark driver
         * process running the `main()` function of the application
         * instantiates SparkSession
         * communicates with the cluster manager
         * requests resources (CPU, memory, etc.) from the cluster manager for Spark’s executors (JVMs)
         * transforms operations into DAG computations and schedules them
+            * directed acyclic graph (DAG) is a finite directed graph with no directed cycles
         * distributes operations execution as tasks across the Spark executors
             * does not run computations (filter,map, reduce, etc)
         * once the resources are allocated, it communicates directly with the executors
@@ -164,88 +166,6 @@
     * Spark SQL generates an optimal physical plan for the selected logical plan
 * Phase 4: Code generation
     * generating efficient Java bytecode to run on each machine
-
-# job      
-* What do I mean by recipe? Is it a job?
-      * Spark defines a job as a parallel computation consisting of multiple tasks that gets
-      spawned in response to a Spark action (such as save() , collect() , and more).
-      * Spark does not have a term describing a list of transformations, which is an essential
-      part of a job
-      * To summarize: Spark handles jobs, and a job consists of a certain number of trans-
-      formations assembled in a recipe.
-    * Spark implements this recipe as a directed acyclic graph (DAG).
-      * In mathematics and computer science, a directed acyclic graph (DAG) is a finite
-      directed graph with no directed cycles. The graph consists of finitely many vertices
-      and edges, with each edge directed from one vertex to another, such that there is no
-      way to start at any vertex v and follow a consistently directed sequence of edges that
-      eventually loops back to v again.
-        * Spark embeds an optimizer, called Catalyst
-          * Before performing the action, Catalyst looks at the DAG and makes a better one
-        * To access the plan, you can use the explain() method of the dataframe
-# session        
-  * You will study three ways of interacting with Spark:
-        * Local mode
-            * which is certainly the developers’ preferred way, as everything runs
-              on the same computer and does not need any configuration
-        * Cluster mode
-            * through a resource manager, which deploys your applications in a
-              cluster
-        * Interactive mode
-            * either directly or via a computer-based notebook, which is probably
-              the preferred way for data scientists and data experimenters
-      * 5.2.1 Local mode
-          * Spark elements:
-              * SparkSession
-              * Executor
-                  * Cache
-                  * Tasks
-        ```
-        SparkSession spark = SparkSession.builder()
-            .appName("My application")
-            .master("local[2]") // by default, the local mode will run with one thread
-            .getOrCreate();
-        ```
-      * 5.2.2 Cluster mode
-          * In cluster mode, Spark behaves in a multinode system with a master and workers
-          * the master dispatches the workload to the
-            worker, which then processes it
-          * Starting several workers on the same worker node is possible too, but I did not find
-            a good use case nor see the benefits
-          * your application code, which is called the driver program, as it drives Spark
-          * What’s an uber JAR?
-              * An uber JAR (also known as super JAR or fat JAR) is a JAR above (literally the German
-                translation of über) the other JARs. The uber JAR contains most, if not all, the depen-
-                dencies of your application. Logistics are then uber simplified because you will han-
-                dle only one JAR.
-          * There are two ways to run an application on a cluster:
-              * You submit a job by using the spark-submit shell and a JAR of your application.
-                  * One way to execute an application on a cluster is to submit a job, as a packaged JAR,
-                    to Spark
-              * You specify the master in your application and then run your code.
-                  * The other way to run an application on a cluster is simply to specify the master’s Spark
-                    URL in your application
-      * 5.2.3 Interactive mode in Scala and Python
-          * You can also run Spark
-            in full interactive mode, which allows you to manipulate big data in a shell.
-
-    * 6.1.1 Quick overview of the components and their interactions
-        * Spark applications run as independent processes on a cluster
-        * The SparkSession object in your application (also called the driver) coordinates the processes.
-            * There is a unique SparkSession for your application, whether you are in local mode or have
-              10,000 nodes.
-            * The SparkSession is created when you build your session
-            ```
-            SparkSession spark = SparkSession.builder()
-                .appName("An app")
-                .master("local[*]")
-                .getOrCreate();
-            ```
-        * As part of your session, you will also get a context: SparkContext
-            * (accessing infrastructure information, creating accumulators, and more)
-        * Once connected, Spark acquires executors on nodes in the cluster, which are JVM
-          processes that run computations and store data for your application
-        * Next, the cluster manager sends your application code to the executors
-        * Finally, SparkSession sends tasks to the executors to run.
 
 # ingestion
 * Data Sources for DataFrames and SQL Tables

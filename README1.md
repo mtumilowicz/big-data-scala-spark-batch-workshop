@@ -29,13 +29,25 @@
     * SQL for interactive queries (Spark SQL)
     * stream processing (Structured Streaming) for interacting with real-time data
     * graph processing (GraphX)
+* four steps of a typical Spark scenario
+    1 Ingestion
+        * at this stage, the data is raw
+    1 Improvement of data quality (DQ)
+        * example: ensure that all birth dates are in the past
+        * example: obfuscate Social Security numbers (SSNs)
+    1 Transformation
+        * example: join with other datasets, perform aggregations
+    1 Publication
+        * people in your organization can perform actions on it and make decisions based on it
+        * example: load the data into a data warehouse, save in a file on S3
+# components overview
 * components and architecture
     ![alt text](img/architecture.png)
     * SparkSession
         * provides a single unified entry point to all of Spark’s functionality
             * defining DataFrames and Datasets
             * reading from data sources
-            * writing to data lakes  
+            * writing to data lakes
             * accessing catalog metadata
             * issuing Spark SQL queries
     * Spark driver
@@ -63,9 +75,9 @@
         * communicates with the driver program
         * executes tasks on the workers
     * Job
-        * parallel computation consisting of multiple tasks that gets spawned in response 
+        * parallel computation consisting of multiple tasks that gets spawned in response
           to a Spark action (e.g. save, collect)
-        * is a sequence of Stages, triggered by an action (ex. `.count()`) 
+        * is a sequence of Stages, triggered by an action (ex. `.count()`)
     * Stage
         * a sequence of Tasks that can all be run together, in parallel, without a shuffle
         * example: using `.read.map.filter` can all be done without a shuffle, so it can fit in a single stage
@@ -73,7 +85,7 @@
         * unit of work that will be sent to one executor
         * is a single operation (ex. `.map` or `.filter`) applied to a single Partition
         * each Task is executed as a single thread in an Executor
-        * example: if your dataset has 2 Partitions, an operation such as a `filter()` will trigger 2 Tasks, 
+        * example: if your dataset has 2 Partitions, an operation such as a `filter()` will trigger 2 Tasks,
           one for each Partition
     * Shuffle
         * operation where data is re-partitioned across a Cluster
@@ -81,35 +93,7 @@
         * example: join and any operation that ends with ByKey will trigger a Shuffle
     * Partition
         * data is split into Partitions so that each Executor can operate on a single part, enabling parallelization
-* example: four steps of a typical Spark scenario
-    1 Ingestion
-        * at this stage, the data is raw
-    1 Improvement of data quality (DQ)
-        * example: ensure that all birth dates are in the past
-        * example: obfuscate Social Security numbers (SSNs)
-    1 Transformation
-        * example: join with other datasets, perform aggregations
-    1 Publication
-        * people in your organization can perform actions on it and make decisions based on it
-        * example: load the data into a data warehouse, save in a file on S3
-# components overview
-* Step 3: Understanding Spark Application Concepts
-    * Application
-      A user program built on Spark using its APIs. It consists of a driver program and
-      executors on the cluster.
-    *  SparkSession
-       An object that provides a point of entry to interact with underlying Spark func‐
-       tionality and allows programming Spark with its APIs. In an interactive Spark
-       shell, the Spark driver instantiates a SparkSession for you, while in a Spark
-       application, you create a SparkSession object yourself.
-    *  Job
-       A parallel computation consisting of multiple tasks that gets spawned in response
-       to a Spark action (e.g., save() , collect() ).
-    *  Stage
-       Each job gets divided into smaller sets of tasks called stages that depend on each
-       other.
-    *   Task
-        A single unit of work or execution that will be sent to a Spark executor.
+
 # dataframe
 * Dataset Encoders
     * Encoders convert data in off-heap memory from Spark’s internal Tungsten format to

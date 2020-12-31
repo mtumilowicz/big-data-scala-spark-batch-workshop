@@ -126,6 +126,12 @@
           schemas, where each column has a specific data type: integer, string, array, map, etc
             * there are no primary or foreign keys or indexes in Spark
             * data can be nested, as in a JSON or XML document
+                * however to perform an analytical operation it's often useful to flattening JSON 
+                  structure (transforming its hierarchical data elements into tabular formats)
+                    * example: perform aggregates (group by) or joins
+                    * flattening JSON = converting the structures into fields and exploding the 
+                      arrays into distinct rows
+                        * `.withColumn("items", explode(df.col("books")))`
         * get first column of given row: `val name = row.getString(0)`
     * Dataset is a collection of strongly typed JVM objects
         * has also an untyped view called a DataFrame, which is a Dataset of Row
@@ -204,20 +210,6 @@
                 * example: `groupBy()`, `orderBy()`
     * actions
         * example: `count()`, `save()`
-* 13.1.1 Flattening your JSON document
-    * you will practice flattening a JSON document: trans-
-      forming JSON and its hierarchical data elements into tabular formats
-    * JSON documents can contain arrays, structures, and, of course, fields.
-        * This makes JSON pretty powerful, but when you want to perform an analytical operation, the pro-
-          cess can become complex.
-    * Why would you want to flatten a JSON document?
-        * JSON is not ideal if you want to perform aggregates (group by) or joins; it is not easy
-          to access the nested data.
-    * Flattening this document consists of converting the structures into fields and explod-
-      ing the arrays into distinct rows.
-    * Arrays are exploded to as many rows as the number of
-      elements in the array using the explode() method.
-        * .withColumn("items", explode(df.col("books")))
 # user-defined functions
 * User-Defined Functions
     * Spark

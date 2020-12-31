@@ -5,7 +5,7 @@ import org.apache.spark.sql.{Dataset, SparkSession}
 object Task1 extends App {
 
   implicit val spark: SparkSession = bootstrapSpark()
-  val file = loadFile("Task1.txt").cache()
+  val file = loadFile("Dataset.txt").cache()
   val fileAnalysis = new TextFileAnalysis(file)
   val numAs = fileAnalysis.lineContaining("a").count()
   val numBs = fileAnalysis.lineContaining("b").count()

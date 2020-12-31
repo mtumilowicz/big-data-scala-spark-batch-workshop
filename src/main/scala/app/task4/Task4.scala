@@ -2,21 +2,19 @@ package app.task4
 
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
-object Task4 {
-  def main(args: Array[String]) {
+object Task4 extends App {
 
-    implicit val spark: SparkSession = bootstrapSpark()
+  implicit val spark: SparkSession = bootstrapSpark()
 
-    val address: DataFrame = loadJsonFile("task4/Dataset2")
+  val address: DataFrame = loadJsonFile("task4/Dataset2")
 
-    val customerInfo: DataFrame = loadCsvFile("task4/Dataset1.csv")
+  val customerInfo: DataFrame = loadCsvFile("task4/Dataset1.csv")
 
-    val enrichedAddress = address.join(customerInfo, "CustomerId")
+  val enrichedAddress = address.join(customerInfo, "CustomerId")
 
-    investigate(enrichedAddress)
+  investigate(enrichedAddress)
 
-    spark.stop()
-  }
+  spark.stop()
 
   def loadJsonFile(filePath: String)(implicit spark: SparkSession): DataFrame =
     spark.read.json(filePath)

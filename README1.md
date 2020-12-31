@@ -18,6 +18,8 @@
     * https://queirozf.com/entries/apache-spark-architecture-overview-clusters-jobs-stages-tasks
     * https://data-flair.training/blogs/apache-spark-rdd-vs-dataframe-vs-dataset/
     * https://medium.com/@venkat34.k/the-three-apache-spark-apis-rdds-vs-dataframes-and-datasets-4caf10e152d8
+    * https://towardsdatascience.com/strategies-of-spark-join-c0e7b4572bcf
+    * https://medium.com/datakaresolutions/optimize-spark-sql-joins-c81b4e3ed7da
 
 ## preface
 
@@ -73,6 +75,7 @@
             * Kubernetes
     * Worker node
         * any node that can run application code in the cluster
+        * may not share filesystems with one another
     * Spark executor
         * runs on each worker node in the cluster
             * only a single executor runs per node
@@ -155,6 +158,8 @@
         * DDL: `val schema = "author STRING, title STRING, pages INT"`
 
 ## data import / export
+* typical use case is to ingest data from an on-premises database, and write the data into 
+  cloud storage (for example, Amazon S3)
 * A data source could be any of the following:
     * A file (CSV, JSON, XML, Avro, Parquet, and ORC, etc)
     * A relational and nonrelational database
@@ -165,6 +170,8 @@
     * can only be accessed through a SparkSession instance
 * DataFrameWriter
     * it saves or writes data to a specified built-in data source
+    * after the file(s) have been successfully exported, Spark will add a _SUCCESS file to the
+      directory
     
 ### file formats
 * problem with traditional file formats
@@ -210,45 +217,9 @@
                 * example: `groupBy()`, `orderBy()`
     * actions
         * example: `count()`, `save()`
-# user-defined functions
-* User-Defined Functions
-    * Spark
-      allows for data engineers and data scientists to define their own functions too. These
-      are known as user-defined functions (UDFs).
-    * // In Scala
-      // Create cubed function
-      val cubed = (s: Long) => {
-      s * s * s
-      }
-      // Register UDF
-      spark.udf.register("cubed", cubed)
-      / In Scala/Python
-      // Query the cubed UDF
-      spark.sql("SELECT id, cubed(id) AS id_cubed FROM udf_test").show()
-* user-defined functions (UDFs)
-    * UDFs are an excellent choice for performing data quality rules, whether you build
-      the rules yourself or use external resources such as libraries
-* 14.1 Extending Apache Spark
-    * As the UDF’s internals are not visible to Catalyst, the UDF is treated as a black box
-      for the optimizer
-        * Spark won’t be able to optimize the UDF
-        * Spark won’t be
-          able to analyze the context where the UDF is called; if you make dataframe API calls
-          before or after, Catalyst can’t optimize the full transformation
-        * I recommend, when possi-
-          ble, having your UDFs at the beginning or the end of your transformations.
-* 14.3 Using UDFs to ensure a high level of data quality
-    * One of my favorite use cases for user-defined functions is achieving better data quality.
-    * Before you can start transforma-
-      tion, or any form of analytics, including machine learning (ML) and artificial intelli-
-      gence (AI), you need to ensure that your raw data is purified through a data quality
-      process.
-    * file -> ingestion -> data quality -> transformation -> publication -> actionable data
-        * Black box for the optimizer
-        * Catalyst is the key component, which optimizes the DAG.
-        * Catalyst does not know anything about what your function is doing.
-## aggregations
-* PERFORMING AN AGGREGATION USING THE DATAFRAME API
+    
+### aggregations
+* DataFrame API
     ```
     Dataset<Row> apiDf = df
         .groupBy(col("firstName"), col("lastName"), col("state"))
@@ -257,7 +228,7 @@
             sum("revenue"),
             avg("revenue"));
     ```
-* PERFORMING AN AGGREGATION USING S PARK SQL
+* SQL
     ```
     df.createOrReplaceTempView("orders");
   
@@ -270,183 +241,39 @@
         " AVG(revenue) " +
         " FROM orders " +
         " GROUP BY firstName, lastName, state";
+  
     Dataset<Row> sqlDf = spark.sql(sqlStatement);
     ```
-# performance
-* Performance is not affected negatively by using an intermediate dataframe.
-    * Performance can be boosted if you cache or checkpoint the data
-    * What’s the point of caching when everything is in memory?
-        * If you plan on reusing a dataframe for different analyses, it is a good idea to cache
-          your data by using the cache() method.
-        * It will increase performance.
-    * The data preparation steps are executed each time you run an analytics pipeline; this can be
-      optimized by using the cache() method.
-    * What is the difference between caching and persistence? 
-      * In Spark they are synonymous
-    * Two API calls, cache() and persist() , offer these capabilities
-        * The latter pro‐
-          vides more control over how and where your data is stored—in memory and on disk,
-          serialized and unserialized
-    * DataFrame.cache()
-        * will store as many of the partitions read in memory across Spark executors
-          as memory allows
-        * While a DataFrame may be fractionally cached,
-          partitions cannot be fractionally cached (e.g., if you have 8 partitions but only 4.5
-          partitions can fit in memory, only 4 will be cached)
-        * When you use cache() or persist() , the DataFrame is not fully
-          cached until you invoke an action that goes through every record
-    * DataFrame.persist()
-        * persist(StorageLevel.LEVEL) is nuanced, providing control over how your data is
-          cached via StorageLevel
-            * DISK_ONLY, OFF_HEAP, etc
-            * Each StorageLevel (except OFF_HEAP ) has an equivalent
-              LEVEL_NAME_2 , which means replicate twice on two different Spark
-              executors: MEMORY_ONLY_2 
-* When to Cache and Persist
-    * where you will want to access a large
-      data set repeatedly for queries or transformations
-      • DataFrames commonly used during iterative machine learning training
-      • DataFrames accessed commonly for doing frequent transformations during ETL
-      or building data pipelines
-    * As a general rule you should use memory caching judiciously, as it can incur resource
-      costs in serializing and deserializing, depending on the StorageLevel used.
-* Apache Spark offers two distinct techniques for increasing performance:
-    * Caching, via cache() or persist() , which can save your data and the data lineage
-    * Checkpointing, via checkpoint() , to save your data, without the lineage
-* 16.1.1 The usefulness of Spark caching
-    * Caching will persist the dataframe
-      in memory, or disk, or a combination of memory and disk
-    * Caching will also save the lineage of the data. 
-        * Saving the lineage is useful only if you need to rebuild your dataset from scratch, which will 
-          happen if one of the nodes of your cluster fails
-    * Spark offers two methods for caching: cache() and persist()
-        * They work the same, except that persist() enables you to specify the storage level you wish to use. 
-            * When using an argument, cache() is a synonym for persist(StorageLevel.MEMORY_ONLY)
-        * Available storage levels with the persist() method are as follows:
-          * MEMORY_ONLY
-            * This is the default level
-            * It will store the RDD composing the dataframe as deserialized Java objects in the JVM. 
-            * If the RDD does not fit in memory, Spark will not cache the partitions; 
-                * Spark will recompute as needed.
-                * You will not be notified.
-          * MEMORY_AND_DISK
-                * Similar to MEMORY_ONLY , except that when Spark runs out of memory, it will serialize the 
-                  RDD on disk. 
-                * It is slower, as disk is slower, but performance will vary depending on the storage class 
-            you may have on your node (NVMe drives versus mechanical drives, for example).
-          * MEMORY_ONLY_SER
-                * Similar to MEMORY_ONLY , but the Java objects are serialized.
-                * This should take less space, but reading will consume more CPU.
-          * MEMORY_AND_DISK_SER
-                * Similar to MEMORY_AND_DISK with serialization.
-          * DISK_ONLY
-                * Stores the partitions of the RDD composing the dataframe to disk.
-          * OFF_HEAP
-                * Similar behavior to MEMORY_ONLY_SER , but it uses off-heap memory.
-                * Off-heap usage needs to be activated
-    * You can use unpersist() to free the cache, as well as storageLevel() to query the
-      dataframe’s current storage level.
-* 16.1.2 The subtle effectiveness of Spark checkpointing
-    * Checkpoints are another way to increase Spark performance
-    * The checkpoint() method will truncate the DAG (or logical plan) and save the
-      content of the dataframe to disk. 
-    * The dataframe is saved in the checkpoint directory.
-    * A checkpoint can be eager or lazy. 
-        * When eager, which is the default, the checkpoint will be created right away. 
-        * If you use false with the checkpoint() method, the checkpoint will be created when an action is called.
-* 16.1.3 Using caching and checkpointing
-    * Cache uses memory. Checkpoints are saved in files.
-    * Cache will be cleaned when the session ends (or sooner). 
-        * However, checkpoints are never clean and will stay on disk as Java serializable files,
-        which means they can easily be opened
-    * Nothing forbids you from combining caching and checkpointing, but I did not find any
-      use case for that.
-* 16.3 Going further in performance optimization
-    * A lot of the issues can come from key skewing (or data skewing): the data is so frag-
-      mented among partitions that a join operation becomes very long.
-        * In this situation, you may want to investigate repartitioning the data by using
-          coalesce() , repartition() , or repartitionByRange()
-        * Repartitioning is most likely to be an expensive
-          operation but it will increase the performance for the join afterward.
-    * Data skewing is not a Spark-specific problem; it can arise from any distributed dataset.
-# exporting data
-* 17.1.4 Exporting the data
-    * The write() method returns a DataFrameWriter
-    * After the file(s) have been successfully exported, Spark will add a _SUCCESS file to the
-      directory, allowing you to monitor whether the operation, which can be lengthy, has
-      completed as expected.
-* 17.1.5 Exporting the data: What really happened?
-    * When you load two datasets, they will be stored in two dataframes.
-        * Each dataframe will have at least one partition.
-        * As you perform a union operation on those dataframes, you will have one resulting
-          dataframe, but the partitions will now be two
-        * The filtering operation, which removes the nominal and low confidence levels to
-          keep the records with high confidence, does not modify the structure of the parti-
-          tions: you will still have two.
-    * Write the Parquet files from two
-      partitions, hence creating two files.
-* 17.3 Accessing cloud storage services from Spark
-    * One typical use case is to ingest data from an on-premises
-      database, and write the data into cloud storage (for example, Amazon S3)
-
+### joins
+* Broadcast Hash Join (map-side-only join)
+    * used when joining one small and large
+        * small = fitting in the driver’s and executor’s memory
+    * smaller data set is broadcasted by the driver to all Spark executors
+    * by default if the smaller data set is less than 10 MB
+    * does not involve any shuffle of the data set
+* Shuffle Sort Merge Join
+    * used when joining two large data sets
+    * default join algorithm
+    * has a pre-requirement that all rows having the same value for the join key 
+      should be stored in the same partition  
+    * has two phases
+        * sort phase
+            * sorts each data set by its desired join key
+        * merge phase
+            * iterates over each key in the row from each data set and merges 
+              the rows if the two keys match
+              
 ## deployment
-* Deployment modes
-    * Because the cluster man‐
-      ager is agnostic to where it runs (as long as it can manage Spark’s executors and
-      fulfill resource requests), Spark can be deployed in some of the most popular envi‐
-      ronments—such as Apache Hadoop YARN and Kubernetes—and can operate in dif‐
-      ferent modes
-    * Mode: Local
-        * Spark driver: Runs on a single JVM, like a
-          laptop or single node
-        * Spark executor: Runs on the same JVM as the
-          driver
-        * Cluster manager: Runs on the same host
-    * Mode: Kubernetes
-        * Spark driver: Runs in a Kubernetes pod
-        * Spark executor: Each worker runs within its own
-          pod
-        * Cluster manager: Kubernetes Master
-* The following is a nonexhaustive list of the main resource managers:
-    * The built-in Spark resource manager
-    * YARN
-    * Mesos
-    * Kubernetes
-* 18.2 Sharing files with Spark
-    * 18.2.1 Accessing the data contained in files
-        * Each worker needs to access the data.
-            * Each needs to access the same file.
-            * Remember that workers are most likely going to run on different nodes, which may not share
-              filesystems with one another.
-    * 18.2.2 Sharing files through distributed filesystems
-        * A distributed filesystem is a filesystem on which you can access files in a distributed environment.
-            * The Hadoop Distributed File System (HDFS) is not the only distributed
-              filesystem, but it is definitely one of the most popular in the context of big data.
-        * A distributed filesystem shares the files (or part of the files) on the different nodes
-          to ensure both access and data replication.
-        * HDFS is one of the components of the Hadoop ecosystem.
-            * HDFS is designed to store large files with a write-once, read-many paradigm.
-            * As a consequence, HDFS is slower at writing or updating, but optimized for read access.
-        * HDFS uses blocks to store information.
-            * The default size is 128 MB.
-            * Blocks are spawned over several servers in several racks, which requires you to be aware of the
-              physical implementation.
-        * Spark can then be a reading and writing client to HDFS
-    * 18.2.3 Accessing files on shared drives or file server
-        * Another way to share data on your network is via a shared drive on a file server
-        * the idea stays the same: you have a server, and clients connect to the server and then transfer
-          the files as those clients need them.
-        * Spark: each worker will access the file server where the files are stored
-    * 18.2.4 Using file-sharing services to distribute files
-        * A third option for sharing files is to use a file-sharing service like Box, Dropbox, own-
-          Cloud/Nextcloud, Google Drive, and others
-        * The system works as a publisher/subscriber: when you drop a file in a directory, it
-          is copied to all subscribers
-        * This system is convenient for distributing files to a lot of nodes, each node being a subscriber
-        * Using a file-sharing service like Box or Dropbox in a Spark environment: files are
-          automatically published to each node, allowing an easy share of each file.
+* Mode: Local
+    * Spark driver: Runs on a single JVM, like a laptop or single node
+    * Spark executor: Runs on the same JVM as the driver
+    * Cluster manager: Runs on the same host
+* Mode: Kubernetes
+    * Spark driver: Runs in a Kubernetes pod
+    * Spark executor: Each worker runs within its own pod
+    * Cluster manager: Kubernetes Master
 
-# security
+## security
 * Spark has built-in security features, but by default, they are not activated
   * When data is within dataframes in Spark, it is isolated per session.
       * There is no way to connect to an existing session, so data isolation guarantees no easy tampering or
@@ -473,42 +300,6 @@
                     store those files on disk.
                   * To activate encryption for those files, you can use the spark.io.encryption.*
                     set of configuration entries.
-# joins
-* A Family of Spark Joins
-    * Join operations are a common type of transformation in big data analytics in which
-      two data sets, in the form of tables or DataFrames, are merged over a common
-      matching key
-    * At the heart of these transformations is how Spark computes what data to produce,
-      what keys and associated data to write to the disk, and how to transfer those keys and
-      data to nodes as part of operations like groupBy() , join() , agg() , sortBy() , and
-      reduceByKey() .
-        * This movement is commonly referred to as the shuffle.
-    * Broadcast Hash Join
-        * Also known as a map-side-only join, the broadcast hash join is employed when two
-          data sets, one small (fitting in the driver’s and executor’s memory) and another large
-          enough to ideally be spared from movement, need to be joined over certain condi‐
-          tions or columns
-        * Using a Spark broadcast variable, the smaller data set is broadcas‐
-          ted by the driver to all Spark executors, as shown in Figure 7-6, and subsequently
-          joined with the larger data set on each executor
-        * By default Spark will use a broadcast join if the smaller data set is less than 10 MB.
-        * For example, consider a simple case where you have a large data set of soccer
-          players around the world, playersDF , and a smaller data set of soccer clubs they play
-          for, clubsDF , and you wish to join them over a common key
-        * The BHJ is the easiest and fastest join Spark offers, since it does not involve any shuf‐
-          fle of the data set
-    * Shuffle Sort Merge Join
-        * The sort-merge algorithm is an efficient way to merge two large data sets over a com‐
-          mon key that is sortable, unique, and can be assigned to or stored in the same parti‐
-          tion
-            * that is, two data sets with a common hashable key that end up being on the
-              same partition
-        * From Spark’s perspective, this means that all rows within each data set
-          with the same key are hashed on the same partition on the same executor
-        * this join scheme has two phases: a sort phase followed by a
-          merge phase. The sort phase sorts each data set by its desired join key; the merge
-          phase iterates over each key in the row from each data set and merges the rows if the
-          two keys match.
 
 ## optimizations
 * at the core of the Spark SQL engine are the Catalyst optimizer and Project Tungsten.
@@ -563,3 +354,37 @@
       
         Dataset<Row> smallCountries = spark.sql("SELECT * FROM ...");
         ```      
+## user-defined functions
+```
+val cubed = (s: Long) => { s * s * s } // define function
+
+spark.udf.register("cubed", cubed) // register UDF
+
+spark.sql("SELECT id, cubed(id) AS id_cubed FROM ...") // use
+```
+* excellent choice for performing data quality rules
+* UDF’s internals are not visible to Catalyst
+    * UDF is treated as a black box for the optimizer
+    * Spark won’t be able to analyze the context where the UDF is called
+        * if you make dataframe API calls before or after, Catalyst can’t optimize
+          the full transformation
+        * should be at the beginning or the end of transformations
+## caching
+* if you reuse a dataframe for different analyses, it is a good idea to cache it
+    * steps are executed each time you run an analytics pipeline
+    * example: DataFrames commonly used during iterative machine learning training
+* caching vs persistence
+    * persist() provides more control over how and where data is stored
+        * DISK_ONLY, OFF_HEAP, etc.
+    * when you use cache() or persist(), the DataFrame is not fully cached until you invoke
+      an action that goes through every record
+        * partitions cannot be fractionally cached (e.g., if you have 8 partitions but only 4.5
+          partitions can fit in memory, only 4 will be cached)
+* vs checkpointing
+    * checkpoint() method will truncate the DAG (or logical plan) and save the content of the
+      dataframe to disk
+    * cache will be cleaned when the session ends
+        * checkpoints will stay on disk
+* note that a lot of the issues can come from key skewing: the data is so fragmented among
+  partitions that a join operation becomes very long
+    * solution: coalesce(), repartition(), or repartitionByRange()    

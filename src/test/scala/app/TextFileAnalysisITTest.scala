@@ -1,5 +1,6 @@
 package app
 
+import app.task1.TextFileAnalysis
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 
@@ -17,7 +18,6 @@ class TextFileAnalysisITTest extends org.scalatest.FunSuite with SparkSessionTes
     numAs2 shouldBe 3
     numBs2 shouldBe 1
     numCs2 shouldBe 0
-
   }
 
 }

@@ -1,4 +1,4 @@
-package app
+package app.task1
 
 import org.apache.spark.sql.Dataset
 

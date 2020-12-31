@@ -10,7 +10,7 @@ object Task2 extends App {
 
   import spark.implicits._
 
-  val rawAddressJson: DataFrame = loadJsonFile(filePath = "task2/Task2_2", schemaPath = "task2/Task2_2_schema.json")
+  val rawAddressJson: DataFrame = loadJsonFile(filePath = "task2/Dataset2", schemaPath = "task2/Dataset2_schema.json")
   val purifiedAddressFromJson = rawAddressJson
     .withColumn("Zipcode", col("Zipcode.code"))
     .as[Address]
@@ -19,7 +19,7 @@ object Task2 extends App {
   investigate(purifiedAddressFromJson.toDF())
 
   val csvSchema = "CustomerId STRING, Zipcode STRING, ZipcodeType STRING, State STRING, City STRING"
-  val rawAddressCsv: DataFrame = loadCsvFile(filePath = "task2/Task2_1.csv", schema = csvSchema)
+  val rawAddressCsv: DataFrame = loadCsvFile(filePath = "task2/Dataset1.csv", schema = csvSchema)
   val purifiedAddressFromCsv = rawAddressCsv
     .drop(col("ZipcodeType"))
     .as[Address]

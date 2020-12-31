@@ -254,8 +254,9 @@
 * Shuffle Sort Merge Join
     * used when joining two large data sets
     * default join algorithm
-    * has a pre-requirement that all rows having the same value for the join key 
-      should be stored in the same partition  
+    * pre-requirement: partitions have to be co-located
+        * all rows having the same value for the join key should be stored in the same partition 
+        * otherwise, there will be shuffle operations to co-locate the data
     * has two phases
         * sort phase
             * sorts each data set by its desired join key
@@ -272,35 +273,7 @@
     * Spark driver: Runs in a Kubernetes pod
     * Spark executor: Each worker runs within its own pod
     * Cluster manager: Kubernetes Master
-
-## security
-* Spark has built-in security features, but by default, they are not activated
-  * When data is within dataframes in Spark, it is isolated per session.
-      * There is no way to connect to an existing session, so data isolation guarantees no easy tampering or
-        even read access.
-  * you need to worry about the following:
-      * Data being transferred over the network
-          * You can think of snooping data, altering data, denial-of-service attacks, and more.
-      * Data being permanently or temporarily stored on disk
-          * Someone could have access to the data.
-  * 18.3.1 Securing the network components of your infrastructure
-      * Spark components rely on remote procedure calls (RPCs) between the components
-      * To secure your infrastructure, you can do the following:
-          * Add authentication between the components, using the spark.authenticate.* series of configuration entries.
-          * Add encryption using the spark.network.crypto.* entries in the configuration file.
-  * 18.3.2 Securing Spark’s disk usage
-      * There are two types of disk usage to consider:
-          * Normal I/O
-              * When your application uses read() / load() , write()/save() , or
-                when you collect() the data to the driver and write the result to disk
-          * Overflow and temporary I/O
-              * When Spark needs to write something to disk without you asking
-              * As you know by now, Apache Spark heavily uses memory to process data.
-                  * However, in cases like ingesting data bigger than the available memory, Spark will
-                    store those files on disk.
-                  * To activate encryption for those files, you can use the spark.io.encryption.*
-                    set of configuration entries.
-
+    
 ## optimizations
 * at the core of the Spark SQL engine are the Catalyst optimizer and Project Tungsten.
 ### tungsten

@@ -20,6 +20,8 @@
     * https://medium.com/@venkat34.k/the-three-apache-spark-apis-rdds-vs-dataframes-and-datasets-4caf10e152d8
     * https://towardsdatascience.com/strategies-of-spark-join-c0e7b4572bcf
     * https://medium.com/datakaresolutions/optimize-spark-sql-joins-c81b4e3ed7da
+    * https://databricks.com/glossary/tungsten
+    * https://jaceklaskowski.gitbooks.io/mastering-spark-sql/content/spark-sql-tungsten.html
 
 ## preface
 
@@ -111,11 +113,6 @@
                 * all that data will have to be transferred, which is a costly operation
             * solution: repartition the data
 ## data representation
-* Spark’s Internal Format Versus Java Object Format
-    * Java objects have large overheads—header info, hashcode, Unicode info, etc.
-    * Instead of creating JVM-based objects for Datasets or DataFrames, Spark allocates
-      off-heap Java memory to lay out their data and employs encoders to convert the data
-      from in-memory representation to JVM object
 * RDD (Resilient Distributed Datasets)
     * fundamental data structure of Spark
     * immutable distributed collection of data
@@ -263,36 +260,7 @@
         * merge phase
             * iterates over each key in the row from each data set and merges 
               the rows if the two keys match
-              
-## deployment
-* Mode: Local
-    * Spark driver: Runs on a single JVM, like a laptop or single node
-    * Spark executor: Runs on the same JVM as the driver
-    * Cluster manager: Runs on the same host
-* Mode: Kubernetes
-    * Spark driver: Runs in a Kubernetes pod
-    * Spark executor: Each worker runs within its own pod
-    * Cluster manager: Kubernetes Master
-    
-## optimizations
-* at the core of the Spark SQL engine are the Catalyst optimizer and Project Tungsten.
-### tungsten
-* focuses on enhancing three key areas: memory management and binary processing, cache-aware
-  computation, and code generation
-### catalyst
-* like an RDBMS query optimizer
-* converts computational query and converts it into an execution plan
-  ![alt text](img/optimization.jpg)
-* Phase 1: Analysis
-    * Spark SQL engine generates AST tree for the SQL or DataFrame query
-* Phase 2: Logical optimization
-    * Catalyst optimizer will construct a set of multiple plans and then, using its cost-based
-      optimizer (CBO), assign costs to each plan
-* Phase 3: Physical planning
-    * Spark SQL generates an optimal physical plan for the selected logical plan
-* Phase 4: Code generation
-    * generating efficient Java bytecode to run on each machine
-## sql
+### sql
 * tables
     ```
     ids.write.
@@ -326,23 +294,49 @@
         df.createOrReplaceTempView("geodata");
       
         Dataset<Row> smallCountries = spark.sql("SELECT * FROM ...");
-        ```      
-## user-defined functions
-```
-val cubed = (s: Long) => { s * s * s } // define function
-
-spark.udf.register("cubed", cubed) // register UDF
-
-spark.sql("SELECT id, cubed(id) AS id_cubed FROM ...") // use
-```
-* excellent choice for performing data quality rules
-* UDF’s internals are not visible to Catalyst
-    * UDF is treated as a black box for the optimizer
-    * Spark won’t be able to analyze the context where the UDF is called
-        * if you make dataframe API calls before or after, Catalyst can’t optimize
-          the full transformation
-        * should be at the beginning or the end of transformations
-## caching
+        ```
+              
+## deployment
+* Mode: Local
+    * Spark driver: Runs on a single JVM, like a laptop or single node
+    * Spark executor: Runs on the same JVM as the driver
+    * Cluster manager: Runs on the same host
+* Mode: Kubernetes
+    * Spark driver: Runs in a Kubernetes pod
+    * Spark executor: Each worker runs within its own pod
+    * Cluster manager: Kubernetes Master
+    
+## optimizations
+* at the core of the Spark SQL engine are the Catalyst optimizer and Project Tungsten.
+### tungsten
+* focuses on enhancing three key areas
+    * memory management and binary processing
+        * manage memory explicitly
+            * off-heap binary memory management
+        * eliminate the overhead of JVM object model and garbage collection
+            * Java objects have large overheads — header info, hashcode, Unicode info, etc.
+            * instead use binary in-memory data representation aka Tungsten row format
+    * cache-aware computation
+        * algorithms and data structures to exploit memory hierarchy (L1, L2, L3)
+        * cache-aware computations with cache-aware layout for high cache hit rates
+    * code generation
+        * exploit modern compilers and CPUs
+        * generates JVM bytecode to access Tungsten-managed memory structures that gives a very fast access
+        * uses the Janino compiler - super-small, super-fast Java compiler
+### catalyst
+* like an RDBMS query optimizer
+* converts computational query and converts it into an execution plan
+    ![alt text](img/optimization.jpg)
+* Phase 1: Analysis
+    * Spark SQL engine generates AST tree for the SQL or DataFrame query
+* Phase 2: Logical optimization
+    * Catalyst optimizer will construct a set of multiple plans and then, using its cost-based
+      optimizer (CBO), assign costs to each plan
+* Phase 3: Physical planning
+    * Spark SQL generates an optimal physical plan for the selected logical plan
+* Phase 4: Code generation
+    * generating efficient Java bytecode to run on each machine
+### caching
 * if you reuse a dataframe for different analyses, it is a good idea to cache it
     * steps are executed each time you run an analytics pipeline
     * example: DataFrames commonly used during iterative machine learning training
@@ -360,4 +354,19 @@ spark.sql("SELECT id, cubed(id) AS id_cubed FROM ...") // use
         * checkpoints will stay on disk
 * note that a lot of the issues can come from key skewing: the data is so fragmented among
   partitions that a join operation becomes very long
-    * solution: coalesce(), repartition(), or repartitionByRange()    
+    * solution: coalesce(), repartition(), or repartitionByRange()
+### user-defined functions
+```
+val cubed = (s: Long) => { s * s * s } // define function
+
+spark.udf.register("cubed", cubed) // register UDF
+
+spark.sql("SELECT id, cubed(id) AS id_cubed FROM ...") // use
+```
+* excellent choice for performing data quality rules
+* UDF’s internals are not visible to Catalyst
+    * UDF is treated as a black box for the optimizer
+    * Spark won’t be able to analyze the context where the UDF is called
+        * if you make dataframe API calls before or after, Catalyst can’t optimize
+          the full transformation
+        * should be at the beginning or the end of transformations

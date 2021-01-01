@@ -17,40 +17,35 @@ object Task2Workshop extends App with SparkWrapper {
 
   spark.stop()
 
-  def unify(jsonPath: String, jsonSchemaPath: String, csvPath: String, csvSchema: String)(implicit spark: SparkSession): Dataset[Address] = {
-    val rawAddressJson: DataFrame = loadJsonFile(filePath = jsonPath, schemaPath = jsonSchemaPath)
-    val purifiedAddressFromJson = purifyRawAddressFromJson(rawAddressJson)
-
-    investigate(rawAddressJson)
-    investigate(purifiedAddressFromJson.toDF())
-
-    val rawAddressCsv: DataFrame = loadCsvFile(filePath = csvPath, schema = csvSchema)
-    val purifiedAddressFromCsv = purifyRawAddressFromCsv(rawAddressCsv)
-
-    investigate(rawAddressCsv)
-    investigate(purifiedAddressFromCsv.toDF())
-
-    dropDuplicatedEntriesForCustomerId(purifiedAddressFromCsv, purifiedAddressFromJson)
+  def unify(jsonPath: String, jsonSchemaPath: String, csvPath: String, csvSchema: String)
+           (implicit spark: SparkSession): Dataset[Address] = {
+    // loadJsonFile
+    // purify address, hint: purifyRawAddressFromJson
+    // investigate raw vs purified, hint: investigate, toDF()
+    // loadCsvFile
+    // purify address, hint: purifyRawAddressFromCsv
+    // investigate raw vs purified, hint: investigate, toDF()
+    // drop duplicates by customerId, hint: dropDuplicatedEntriesForCustomerId
+    null
   }
 
-  def dropDuplicatedEntriesForCustomerId(purifiedAddressFromCsv: Dataset[Address], purifiedAddressFromJson: Dataset[Address]) =
-    purifiedAddressFromCsv.unionByName(purifiedAddressFromJson)
-      .dropDuplicates("CustomerId")
+  def dropDuplicatedEntriesForCustomerId(purifiedAddressFromCsv: Dataset[Address],
+                                          purifiedAddressFromJson: Dataset[Address]): Dataset[Address] = null
+  // sum sets and drop duplicates, hint: unionByName, dropDuplicates
 
   def purifyRawAddressFromJson(dataFrame: DataFrame)(implicit spark: SparkSession): Dataset[Address] = {
     import spark.implicits._
 
-    dataFrame
-      .withColumn("Zipcode", col("Zipcode.code"))
-      .as[Address]
+    // replace struct Zipcode with column Zipcode.code, hint: withColumn
+    // map to case class Address, hint: as[T]
+    null
   }
 
   def purifyRawAddressFromCsv(dataFrame: DataFrame)(implicit spark: SparkSession): Dataset[Address] = {
     import spark.implicits._
 
-    dataFrame
-      .drop("ZipcodeType")
-      .as[Address]
+    // drop ZipcodeType column, hint: drop
+    null
   }
 
 }

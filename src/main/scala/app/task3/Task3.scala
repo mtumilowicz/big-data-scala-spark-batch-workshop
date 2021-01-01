@@ -9,21 +9,21 @@ object Task3 extends App {
 
   def address = loadCsvFile("task3/Dataset.csv")
 
-  investigate(aggregateUsingApi(address))
-  investigate(aggregateUsingSql(address))
+  investigate(countByStateUsingApi(address))
+  investigate(countByStateUsingSql(address))
 
   spark.stop()
 
   def loadCsvFile(filePath: String)(implicit spark: SparkSession): DataFrame =
     spark.read.option("header", "true").csv(filePath)
 
-  def aggregateUsingApi(addresses: DataFrame)(implicit spark: SparkSession): DataFrame =
+  def countByStateUsingApi(addresses: DataFrame)(implicit spark: SparkSession): DataFrame =
     addresses.groupBy("State")
-      .agg(count("CustomerId").alias("Customers"))
+      .agg(count("CustomerId").alias("CustomersNumber"))
 
-  def aggregateUsingSql(addresses: DataFrame)(implicit spark: SparkSession): DataFrame = {
+  def countByStateUsingSql(addresses: DataFrame)(implicit spark: SparkSession): DataFrame = {
     addresses.createOrReplaceTempView("people")
-    spark.sql("SELECT State, COUNT(CustomerId) as Customers FROM people GROUP BY State")
+    spark.sql("SELECT State, COUNT(CustomerId) as CustomersNumber FROM people GROUP BY State")
   }
 
   def bootstrapSpark(): SparkSession = {

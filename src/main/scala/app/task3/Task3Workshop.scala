@@ -4,7 +4,7 @@ import app.task0.SparkWrapper
 import org.apache.spark.sql.functions.count
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
-object Task3 extends App with SparkWrapper {
+object Task3Workshop extends App with SparkWrapper {
 
   def address = loadCsvFile("task3/Dataset.csv")
 

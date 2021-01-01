@@ -1,8 +1,10 @@
 package app.task2
 
 import app.SparkSessionTestWrapper
+import org.scalatest.Ignore
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
+@Ignore
 class Task2WorkshopTest extends org.scalatest.FunSuite with SparkSessionTestWrapper {
 
   test("dropDuplicatedEntriesForCustomerId") {

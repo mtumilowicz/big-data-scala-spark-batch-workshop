@@ -3,7 +3,7 @@ package app.task3
 import app.SparkSessionTestWrapper
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
-class Task3Test extends org.scalatest.FunSuite with SparkSessionTestWrapper {
+class Task3WorkshopTest extends org.scalatest.FunSuite with SparkSessionTestWrapper {
 
   test("countCustomersByStateUsingApi") {
     import spark.implicits._

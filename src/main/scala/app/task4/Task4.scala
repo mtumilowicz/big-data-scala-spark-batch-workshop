@@ -1,7 +1,7 @@
 package app.task4
 
 import app.task0.SparkWrapper
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql.DataFrame
 
 object Task4 extends App with SparkWrapper {
 

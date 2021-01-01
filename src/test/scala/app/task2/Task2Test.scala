@@ -8,7 +8,7 @@ class Task2Test extends org.scalatest.FunSuite with SparkSessionTestWrapper {
 
   test("dropDuplicatedEntriesForCustomerId") {
     //    given
-    val csvSchema = "CustomerId STRING, Zipcode STRING, ZipcodeType STRING, State STRING, City STRING"
+    val csvSchema = "CustomerId INT, Zipcode STRING, ZipcodeType STRING, State STRING, City STRING"
     val address = unify(
       "task2/Dataset2",
       "task2/Dataset2_schema.json",
@@ -16,6 +16,11 @@ class Task2Test extends org.scalatest.FunSuite with SparkSessionTestWrapper {
       csvSchema)
 
     //    expect
-    address.count() shouldBe 4
+    val asArray: Array[Address] = address.collect()
+      .sortBy(_.customerId)
+    asArray(0).customerId shouldBe 2
+    asArray(1).customerId shouldBe 3
+    asArray(2).customerId shouldBe 10
+    asArray(3).customerId shouldBe 11
   }
 }

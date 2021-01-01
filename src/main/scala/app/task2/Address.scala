@@ -1,7 +1,7 @@
 package app.task2
 
-case class Address(CustomerId: String,
-                   Zipcode: String,
-                   City: String,
-                   State: String
+case class Address(customerId: Int,
+                   zipcode: String,
+                   city: String,
+                   state: String
                   )

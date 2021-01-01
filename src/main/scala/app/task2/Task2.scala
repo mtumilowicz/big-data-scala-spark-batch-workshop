@@ -8,7 +8,7 @@ object Task2 extends App {
 
   implicit val spark: SparkSession = bootstrapSpark()
 
-  val csvSchema = "CustomerId STRING, Zipcode STRING, ZipcodeType STRING, State STRING, City STRING"
+  val csvSchema = "CustomerId INT, Zipcode STRING, ZipcodeType STRING, State STRING, City STRING"
   investigate(unify(
     "task2/Dataset2",
     "task2/Dataset2_schema.json",

@@ -18,6 +18,7 @@ class Task2Test extends org.scalatest.FunSuite with SparkSessionTestWrapper {
     //    expect
     val asArray: Array[Address] = address.collect()
       .sortBy(_.customerId)
+    asArray.length shouldBe 4
     asArray(0).customerId shouldBe 2
     asArray(1).customerId shouldBe 3
     asArray(2).customerId shouldBe 10

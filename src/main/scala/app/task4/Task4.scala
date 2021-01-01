@@ -10,11 +10,14 @@ object Task4 extends App {
 
   val customerInfo: DataFrame = loadCsvFile("task4/Dataset1.csv")
 
-  val enrichedAddress = address.join(customerInfo, "CustomerId")
+  val enrichedAddress = enrich(address, customerInfo)
 
   investigate(enrichedAddress)
 
   spark.stop()
+
+  def enrich(data: DataFrame, additionalInfo: DataFrame): DataFrame =
+    data.join(additionalInfo, "CustomerId")
 
   def loadJsonFile(filePath: String)(implicit spark: SparkSession): DataFrame =
     spark.read.json(filePath)

@@ -47,6 +47,7 @@ class Task3Test extends org.scalatest.FunSuite with SparkSessionTestWrapper {
 
     //    then
     val asArray = countByState.collect().sortBy(_.getAs[String]("State"))
+    asArray.length shouldBe 3
     asArray(0).getAs[String]("State") shouldBe "California"
     asArray(0).getAs[Int]("CustomersNumber") shouldBe 2
     asArray(1).getAs[String]("State") shouldBe "NY"

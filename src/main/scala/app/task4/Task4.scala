@@ -1,10 +1,9 @@
 package app.task4
 
+import app.task0.SparkWrapper
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
-object Task4 extends App {
-
-  implicit val spark: SparkSession = bootstrapSpark()
+object Task4 extends App with SparkWrapper {
 
   val address: DataFrame = loadJsonFile("task4/Dataset2")
 
@@ -18,26 +17,4 @@ object Task4 extends App {
 
   def enrich(data: DataFrame, additionalInfo: DataFrame): DataFrame =
     data.join(additionalInfo, "CustomerId")
-
-  def loadJsonFile(filePath: String)(implicit spark: SparkSession): DataFrame =
-    spark.read.json(filePath)
-
-  def loadCsvFile(filePath: String)(implicit spark: SparkSession): DataFrame =
-    spark.read.option("header", "true").csv(filePath)
-
-  def investigate(dataFrame: DataFrame): Unit = {
-    dataFrame.show()
-    dataFrame.printSchema()
-  }
-
-  def bootstrapSpark(): SparkSession = {
-    val spark = SparkSession.builder
-      .appName("Simple Application")
-      .master("local")
-      .getOrCreate()
-
-    spark.sparkContext.setLogLevel("ERROR")
-
-    spark
-  }
 }

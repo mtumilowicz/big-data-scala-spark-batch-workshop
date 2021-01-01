@@ -1,12 +1,10 @@
 package app.task2
 
+import app.task0.SparkWrapper
 import org.apache.spark.sql.functions.col
-import org.apache.spark.sql.types.{DataType, StructType}
 import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
 
-object Task2 extends App {
-
-  implicit val spark: SparkSession = bootstrapSpark()
+object Task2 extends App with SparkWrapper {
 
   val csvSchema = "CustomerId INT, Zipcode STRING, ZipcodeType STRING, State STRING, City STRING"
   investigate(unify(
@@ -53,33 +51,6 @@ object Task2 extends App {
     dataFrame
       .drop("ZipcodeType")
       .as[Address]
-  }
-
-  def loadJsonFile(filePath: String, schemaPath: String)(implicit spark: SparkSession): DataFrame = {
-    val source = scala.io.Source.fromFile(schemaPath)
-    val lines = try source.getLines.mkString finally source.close()
-    val schemaFromJson = DataType.fromJson(lines).asInstanceOf[StructType]
-    spark.read.schema(schemaFromJson).json(filePath)
-  }
-
-  def loadCsvFile(filePath: String, schema: String)(implicit spark: SparkSession): DataFrame = {
-    spark.read.schema(schema).option("header", "true").csv(filePath)
-  }
-
-  def bootstrapSpark(): SparkSession = {
-    val spark = SparkSession.builder
-      .appName("Simple Application")
-      .master("local")
-      .getOrCreate()
-
-    spark.sparkContext.setLogLevel("ERROR")
-
-    spark
-  }
-
-  def investigate(dataFrame: DataFrame): Unit = {
-    dataFrame.show()
-    dataFrame.printSchema()
   }
 
 }

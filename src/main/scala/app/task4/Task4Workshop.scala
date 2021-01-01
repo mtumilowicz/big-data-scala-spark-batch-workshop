@@ -15,6 +15,6 @@ object Task4Workshop extends App with SparkWrapper {
 
   spark.stop()
 
-  def enrich(data: DataFrame, additionalInfo: DataFrame): DataFrame =
-    data.join(additionalInfo, "CustomerId")
+  def enrich(data: DataFrame, additionalInfo: DataFrame): DataFrame = null
+  // join data with additionalInfo on CustomerId, hint: data.join
 }

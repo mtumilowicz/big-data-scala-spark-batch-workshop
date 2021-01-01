@@ -1,8 +1,10 @@
 package app.task4
 
 import app.SparkSessionTestWrapper
+import org.scalatest.Ignore
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
+@Ignore
 class Task4WorkshopTest extends org.scalatest.FunSuite with SparkSessionTestWrapper {
 
   test("testEnrich") {

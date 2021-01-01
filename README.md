@@ -1,6 +1,5 @@
-[![Build Status](https://travis-ci.com/mtumilowicz/java12-fundamentals-cache-implementations-workshop.svg?branch=master)](https://travis-ci.com/mtumilowicz/java12-fundamentals-cache-implementations-workshop)
+[![Build Status](https://travis-ci.com/mtumilowicz/big-data-scala-spark-batch-workshop.svg?branch=master)](https://travis-ci.com/mtumilowicz/big-data-scala-spark-batch-workshop)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-
 
 # big-data-scala-spark-batch-workshop
 * references

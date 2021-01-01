@@ -1,6 +1,6 @@
 package app.task3
 
-import org.apache.spark.sql.functions.{col, count}
+import org.apache.spark.sql.functions.count
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 object Task3 extends App {
@@ -14,17 +14,17 @@ object Task3 extends App {
 
   spark.stop()
 
+  def loadCsvFile(filePath: String)(implicit spark: SparkSession): DataFrame =
+    spark.read.option("header", "true").csv(filePath)
+
   def aggregateUsingApi(addresses: DataFrame)(implicit spark: SparkSession): DataFrame =
-    addresses.groupBy(col("State"))
+    addresses.groupBy("State")
       .agg(count("CustomerId").alias("Customers"))
 
   def aggregateUsingSql(addresses: DataFrame)(implicit spark: SparkSession): DataFrame = {
     addresses.createOrReplaceTempView("people")
     spark.sql("SELECT State, COUNT(CustomerId) as Customers FROM people GROUP BY State")
   }
-
-  def loadCsvFile(filePath: String)(implicit spark: SparkSession): DataFrame =
-    spark.read.option("header", "true").csv(filePath)
 
   def bootstrapSpark(): SparkSession = {
     val spark = SparkSession.builder

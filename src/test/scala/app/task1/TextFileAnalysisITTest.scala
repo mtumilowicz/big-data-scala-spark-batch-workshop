@@ -1,6 +1,6 @@
-package app
+package app.task1
 
-import app.task1.TextFileAnalysis
+import app.SparkSessionTestWrapper
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 

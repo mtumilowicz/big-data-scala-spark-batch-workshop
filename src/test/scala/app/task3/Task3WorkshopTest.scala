@@ -1,8 +1,10 @@
 package app.task3
 
 import app.SparkSessionTestWrapper
+import org.scalatest.Ignore
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
+@Ignore
 class Task3WorkshopTest extends org.scalatest.FunSuite with SparkSessionTestWrapper {
 
   test("countCustomersByStateUsingApi") {
@@ -18,7 +20,7 @@ class Task3WorkshopTest extends org.scalatest.FunSuite with SparkSessionTestWrap
     ).toDF("CustomerId", "State")
 
     //    when
-    val countByState = Task3.countCustomersByStateUsingApi(inputAddresses)
+    val countByState = Task3Workshop.countCustomersByStateUsingApi(inputAddresses)
 
     //    then
     val asArray = countByState.collect().sortBy(_.getAs[String]("State"))
@@ -43,7 +45,7 @@ class Task3WorkshopTest extends org.scalatest.FunSuite with SparkSessionTestWrap
     ).toDF("CustomerId", "State")
 
     //    when
-    val countByState = Task3.countCustomersByStateUsingSql(inputAddresses)
+    val countByState = Task3Workshop.countCustomersByStateUsingSql(inputAddresses)
 
     //    then
     val asArray = countByState.collect().sortBy(_.getAs[String]("State"))

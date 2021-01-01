@@ -13,13 +13,13 @@ object Task3Workshop extends App with SparkWrapper {
 
   spark.stop()
 
-  def countCustomersByStateUsingApi(addresses: DataFrame)(implicit spark: SparkSession): DataFrame =
-    addresses.groupBy("State")
-      .agg(count("CustomerId").alias("CustomersNumber"))
+  def countCustomersByStateUsingApi(addresses: DataFrame)(implicit spark: SparkSession): DataFrame = null
+  // hint: groupBy, agg, count, alias
 
   def countCustomersByStateUsingSql(addresses: DataFrame)(implicit spark: SparkSession): DataFrame = {
-    addresses.createOrReplaceTempView("people")
-    spark.sql("SELECT State, COUNT(CustomerId) as CustomersNumber FROM people GROUP BY State")
+    // prepare view, hint: createOrReplaceTempView
+    // execute sql, hint: spark.sql
+    null
   }
 
 }

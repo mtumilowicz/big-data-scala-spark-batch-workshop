@@ -27,6 +27,10 @@
     * https://jaceklaskowski.gitbooks.io/mastering-spark-sql/content/spark-sql-tungsten.html
 
 ## preface
+* goals of this workshop:
+    * introduction to spark and its architecture of spark
+    * peek under the hood: data representation and optimizations
+    * practicing rudimentary use-cases
 
 ## spark
 * a unified engine designed for large-scale distributed data processing, on premises in data centers 

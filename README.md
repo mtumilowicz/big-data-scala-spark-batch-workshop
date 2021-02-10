@@ -25,6 +25,13 @@
     * https://medium.com/datakaresolutions/optimize-spark-sql-joins-c81b4e3ed7da
     * https://databricks.com/glossary/tungsten
     * https://jaceklaskowski.gitbooks.io/mastering-spark-sql/content/spark-sql-tungsten.html
+    * https://www.dezyre.com/article/how-data-partitioning-in-spark-helps-achieve-more-parallelism/297
+    * https://luminousmen.com/post/spark-partitions
+    * https://www.24tutorials.com/spark/flatten-json-spark-dataframe/
+    * https://medium.com/@dvcanton/wide-and-narrow-dependencies-in-apache-spark-21acf2faf031
+    * https://towardsdatascience.com/best-practices-for-caching-in-spark-sql-b22fb0f02d34
+    * https://medium.com/@adrianchang/apache-spark-checkpointing-ebd2ec065371
+    * http://www.lifeisafile.com/Apache-Spark-Caching-Vs-Checkpointing/
 
 ## preface
 * goals of this workshop:
@@ -33,116 +40,113 @@
     * practicing rudimentary use-cases
 
 ## spark
-* a unified engine designed for large-scale distributed data processing, on premises in data centers 
-  or in the cloud
+* unified engine designed for large-scale distributed data processing
 * provides in-memory storage for intermediate computations
     * faster than Hadoop MapReduce
-* incorporates libraries for
+* libraries
     * machine learning (MLlib)
     * SQL for interactive queries (Spark SQL)
-    * stream processing (Structured Streaming) for interacting with real-time data
+    * stream processing (Structured Streaming) based on micro-batch processing engine
     * graph processing (GraphX)
-* four steps of a typical Spark scenario
-    1 Ingestion
-        * at this stage, the data is raw
-    1 Improvement of data quality (DQ)
+* typical Spark scenario
+    1 Ingestion of raw data
+    1 DQ: data quality
         * example: ensure that all birth dates are in the past
         * example: obfuscate Social Security numbers (SSNs)
     1 Transformation
         * example: join with other datasets, perform aggregations
     1 Publication
-        * people in your organization can perform actions on it and make decisions based on it
         * example: load the data into a data warehouse, save in a file on S3
 # components overview
 * components and architecture
     ![alt text](img/architecture.png)
     * SparkSession
-        * provides a single unified entry point to all of Spark’s functionality
+        * a single unified entry point to all of Spark’s functionality
+        * use cases
             * defining DataFrames and Datasets
             * reading from data sources
             * writing to data lakes
             * accessing catalog metadata
             * issuing Spark SQL queries
-        * there is a unique SparkSession for your application, whether you are in local mode or have 10,000 nodes
+        * there is a unique SparkSession for your application, not matter how many nodes it runs
     * Spark driver
         * process running the `main()` function of the application
         * instantiates SparkSession
         * communicates with the cluster manager
         * requests resources (CPU, memory, etc.) from the cluster manager for Spark’s executors (JVMs)
-        * transforms operations into DAG computations and schedules them
-            * directed acyclic graph (DAG) is a finite directed graph with no directed cycles
-        * distributes operations execution as tasks across the Spark executors
-            * does not run computations (filter,map, reduce, etc)
+        * transforms operations into directed acyclic graph (DAG) computations and schedules them
+        * distributes operations execution across the Spark executors
         * once the resources are allocated, it communicates directly with the executors
         * resides on master node
     * Cluster manager
-        * manages and allocates resources for the cluster of nodes on which your Spark application runs
-        * supports four cluster managers
+        * manages and allocates resources for the cluster
+        * four types
             * the built-in standalone cluster manager
             * Apache Hadoop YARN
             * Apache Mesos
             * Kubernetes
+                * Spark driver: Runs in a Kubernetes pod
+                * Spark executor: Each worker runs within its own pod
+                * Cluster manager: Kubernetes Master
     * Worker node
         * any node that can run application code in the cluster
         * may not share filesystems with one another
     * Spark executor
-        * runs on each worker node in the cluster
-            * only a single executor runs per node
+        * single executor per each node
         * communicates with the driver program
         * executes tasks on the workers
     * Job
-        * parallel computation consisting of multiple tasks that gets spawned in response
-          to a Spark action (e.g. save, collect)
         * is a sequence of Stages, triggered by an action (ex. `.count()`)
     * Stage
-        * a sequence of Tasks that can all be run together, in parallel, without a shuffle
-        * example: using `.read.map.filter` can all be done without a shuffle, so it can fit in a single stage
+        * a sequence of Tasks that can all be run in parallel without a shuffle
+        * example: `.read.map.filter`
     * Task
         * unit of work that will be sent to one executor
         * is a single operation (ex. `.map` or `.filter`) applied to a single Partition
-        * each Task is executed as a single thread in an Executor
-        * example: if your dataset has 2 Partitions, an operation such as a `filter()` will trigger 2 Tasks,
-          one for each Partition
+        * is executed as a single thread in an Executor
+        * example: 2 Partitions, operation: `filter()` => 2 Tasks, one for each Partition
     * Shuffle
-        * operation where data is re-partitioned across a Cluster
-        * costly operation because a lot of data can be sent via the network
+        * operation where data is re-partitioned across a cluster
+            * by having all the data needed to calculate on a single node, we reduce the
+            overhead on the shuffle (the need for serialization and network traffic)
+        * costly operation - a lot of data travels via the network
         * example: join and any operation that ends with ByKey will trigger a Shuffle
     * Partition
-        * data is split into Partitions so that each Executor can operate on a single part, enabling parallelization
-        * example: ingesting the CSV file in a distributed way
-            * file must be on a shared drive, distributed filesystem (like HDFS), or shared
-              filesystem mechanism such as Dropbox
-            * workers will create tasks to read the file
-                * worker will assign a memory partition to the task
-                * task will read a part of the CSV file and stores them in a dedicated partition
-        * why should you care?
-            * joining data from the first partition of worker 1 with data in the second partition of worker 2
-                * all that data will have to be transferred, which is a costly operation
-            * solution: repartition the data
+        * enable parallelization: data is split into Partitions so that each Executor can operate
+        on a single part
+            * once the user has submitted his job into the cluster, each partition is sent to a
+            specific executor for further processing
+            * the more partitions the more work is distributed to executors, with a smaller number
+            of partitions the work will be done in larger pieces
+        * every machine in a spark cluster contains one or more partitions
+            * single partition do not span multiple machines
+        * good starting point: number of partitions equal to the number of cores
+            * example
+                * 4 cores and 5 partitions
+                * processing of each partition takes 5 minutes
+                * total time: 10 minutes (4 in parallel in 5 minutes, then 1 in 5 minutes)
+
 ## data representation
 * RDD (Resilient Distributed Datasets)
     * fundamental data structure of Spark
     * immutable distributed collection of data
         * data itself is in partitions
-* Dataset
-    * take on two characteristics: typed and untyped APIs
-    * think of a DataFrame in Scala as an alias for a collection of generic objects, `Dataset[Row]`
-        * Row is a generic untyped JVM object that may hold different types of fields
-            * uses efficient storage called Tungsten
-        * DataFrames are like distributed in-memory tables with named columns and
-          schemas, where each column has a specific data type: integer, string, array, map, etc
-            * there are no primary or foreign keys or indexes in Spark
-            * data can be nested, as in a JSON or XML document
-                * however to perform an analytical operation it's often useful to flattening JSON 
-                  structure (transforming its hierarchical data elements into tabular formats)
-                    * example: perform aggregates (group by) or joins
-                    * flattening JSON = converting the structures into fields and exploding the 
-                      arrays into distinct rows
-                        * `.withColumn("items", explode(df.col("books")))`
-        * get first column of given row: `val name = row.getString(0)`
+* Dataset and DataFrame
+    * take on two characteristics: DataFrame - typed and Dataset - untyped APIs
     * Dataset is a collection of strongly typed JVM objects
         * has also an untyped view called a DataFrame, which is a Dataset of Row
-    * Converting DataFrames to Datasets
+            * Row is a generic untyped JVM object that may hold different types of fields
+                * get first column of given row: `val name = row.getString(0)`
+    * DataFrames are similar to distributed in-memory tables with named columns with types
+    (integer, string, array, map, etc), schemas
+        * no primary or foreign keys or indexes in Spark
+        * data can be nested, as in a JSON or XML document
+            * it's often useful to flattening JSON to facilitate using sql syntax
+                * flattening JSON = converting the structures into fields and exploding the arrays into distinct rows
+                ![alt text](img/before_flattening.png)
+                ![alt text](img/after_flattening.png)
+                * example: perform aggregates (group by)
+    * conversion: DataFrame -> Dataset
         ```
         val bloggersDS = spark
           .read
@@ -152,42 +156,40 @@
         ```
 * schemas
     * defines the column names and associated data types for a DataFrame
-    * defining vs inferring a schema
-        * no inferring data types
-        * no separate job just to read a large portion of file to ascertain the schema
-            * for a large data file can be expensive and time-consuming
-        * errors detection if data doesn’t match the schema
-    * ways to define a schema
+    * inferring a schema (plus inferring data types)
+        * requires separate job to read a large portion of file to infer the schema
+        * can be expensive and time-consuming
+        * no errors detection if data doesn’t match the schema
+    * defining a schema
         * programmatically: `val schema = StructType(Array(StructField("author", StringType, false)`
         * DDL: `val schema = "author STRING, title STRING, pages INT"`
 
 ## data import / export
-* typical use case is to ingest data from an on-premises database, and write the data into 
-  cloud storage (for example, Amazon S3)
-* A data source could be any of the following:
-    * A file (CSV, JSON, XML, Avro, Parquet, and ORC, etc)
-    * A relational and nonrelational database
+* typical use case: read from on-premise database and push to cloud storage (Amazon S3)
+* data source types
+    * file (CSV, JSON, XML, Avro, Parquet, and ORC, etc)
+    * relational and nonrelational database
     * other data provider: (REST) service, etc
 * DataFrameReader
-    * core construct for reading data into a DataFrame from myriad
-      data sources in formats such as JSON, CSV, Parquet, Text, Avro, ORC, etc.
-    * can only be accessed through a SparkSession instance
+    * core construct for reading data into a DataFrame
+    * supports many formats such as JSON, CSV, Parquet, Text, Avro, ORC, etc.
 * DataFrameWriter
-    * it saves or writes data to a specified built-in data source
-    * after the file(s) have been successfully exported, Spark will add a _SUCCESS file to the
+    * it saves data to a data source
+    * after the files have been successfully exported, Spark will add a _SUCCESS file to the
       directory
     
 ### file formats
 * problem with traditional file formats
-    * JSON and XML are not easy to split and big data files need to be splittable
-    * CSV cannot store hierarchical information as JSON or XML can
-    * none are designed to incorporate metadata.
-    * formats are quite verbose (especially JSON and XML), which inflates the file size drastically
-* big data brings its own set of file formats: Avro, ORC, or Parquet   
+    * big data files need to be splittable
+        * JSON and XML are not easy to split
+    * CSV cannot store hierarchical information (like JSON or XML)
+    * none designed to incorporate metadata
+    * quite heavy in size (especially JSON and XML)
+* big data formats: Avro, ORC, or Parquet
     * Avro 
         * schema-based serialization format (binary data)
         * supports dynamic modification of the schema
-        * is row-based, so easier to split
+        * row-based, so easier to split
     * ORC 
         * columnar storage format
         * supports compression
@@ -197,30 +199,24 @@
         * add columns at the end of the schema
         * Parquet metadata usually contains the schema
             * if the DataFrame is written as Parquet, the schema is preserved as part of the Parquet metadata
-              * subsequent reads do not require you supply a schema
+              * subsequent reads do not require you to supply a schema
         * default and preferred data source for Spark
-        * files are stored in a directory structure that contains the data files, metadata,
-          a number of compressed files, and some status files
+        * files are stored in a directory structure: data files, metadata, a number of compressed files,
+        and some status files
 ## data transformation
 * operations can be classified into two types
+    * actions
+        * example: `count()`, `save()`
+        * triggers evaluation
     * transformations
         * `DataFrame -> DataFrame`
         * example: `select()`, `filter()`
         * evaluated lazily
-            * action triggers evaluation
-            * results are not computed immediately, but they are recorded or remembered as a lineage
-                * allows Spark to optimize queries (rearrange certain transformations, coalesce them, etc.)
-                * provides fault tolerance: can reproduce its original state by simply replaying the 
-                  recorded lineage
+            * results are recorded as a lineage
+                * allows to optimize queries (rearrange certain transformations, coalesce them, etc.)
+                * provides fault tolerance: reproduce its state by replaying the lineage
         * two types
-            * narrow
-                * single output partition is computed from a single input partition
-                * example: `filter()`, `contains()`
-            * wide
-                * data from other partitions is read in, combined, and written to disk
-                * example: `groupBy()`, `orderBy()`
-    * actions
-        * example: `count()`, `save()`
+            ![alt text](img/narrow_vs_wide.png)
     
 ### aggregations
 * DataFrame API
@@ -232,7 +228,7 @@
             sum("revenue"),
             avg("revenue"));
     ```
-* SQL
+    is equivalent to
     ```
     df.createOrReplaceTempView("orders");
   
@@ -250,7 +246,7 @@
     ```
 ### joins
 * Broadcast Hash Join (map-side-only join)
-    * used when joining one small and large
+    * used when joining small with large
         * small = fitting in the driver’s and executor’s memory
     * smaller data set is broadcasted by the driver to all Spark executors
     * by default if the smaller data set is less than 10 MB
@@ -270,13 +266,13 @@
 ### sql
 * tables
     ```
-    ids.write.
-      option("path", "/tmp/five_ids").
-      saveAsTable("five_ids")
+    ids.write
+        .option("path", "/tmp/five_ids")
+        .saveAsTable("five_ids")
     ```
     * each table is associated with its relevant metadata (the schema, partitions, physical location
       where the actual data resides, etc.)
-        * all metadata is stored in a central metastore
+        * metadata is stored in a central metastore
             * by default: Apache Hive metastore
                 * Catalog is the interface for managing a metastore
                     * spark.catalog.listDatabases()
@@ -292,7 +288,6 @@
         * unmanaged
             * Spark only manages the metadata
             * example: Cassandra
-    * reside within a database
 * views
     * vs table: views don’t actually hold the data
         * tables persist after application terminates, but views disappear
@@ -302,19 +297,12 @@
       
         Dataset<Row> smallCountries = spark.sql("SELECT * FROM ...");
         ```
-              
-## deployment
-* Mode: Local
-    * Spark driver: Runs on a single JVM, like a laptop or single node
-    * Spark executor: Runs on the same JVM as the driver
-    * Cluster manager: Runs on the same host
-* Mode: Kubernetes
-    * Spark driver: Runs in a Kubernetes pod
-    * Spark executor: Each worker runs within its own pod
-    * Cluster manager: Kubernetes Master
     
 ## optimizations
-* at the core of the Spark SQL engine are the Catalyst optimizer and Project Tungsten.
+* at the core of the Spark SQL engine are the Catalyst optimizer and Project Tungsten
+* note that a lot of the issues can come from key skewing: the data is so fragmented among
+  partitions that a join operation becomes very long
+
 ### tungsten
 * focuses on enhancing three key areas
     * memory management and binary processing
@@ -330,38 +318,49 @@
         * exploit modern compilers and CPUs
         * generates JVM bytecode to access Tungsten-managed memory structures that gives a very fast access
         * uses the Janino compiler - super-small, super-fast Java compiler
+
 ### catalyst
-* like an RDBMS query optimizer
+* similar concept to RDBMS query optimizer
 * converts computational query and converts it into an execution plan
     ![alt text](img/optimization.jpg)
 * Phase 1: Analysis
     * Spark SQL engine generates AST tree for the SQL or DataFrame query
 * Phase 2: Logical optimization
-    * Catalyst optimizer will construct a set of multiple plans and then, using its cost-based
-      optimizer (CBO), assign costs to each plan
+    * catalyst constructs a set of multiple plans and using its cost-based
+      optimizer assign costs to each plan
 * Phase 3: Physical planning
     * Spark SQL generates an optimal physical plan for the selected logical plan
 * Phase 4: Code generation
     * generating efficient Java bytecode to run on each machine
+
 ### caching
+* Spark maintains a history of all transformations you may apply to a DataFrame or RDD
+    * this enables Spark to be fault tolerant
+    * however Spark programs take a huge performance hit when fault occurs
+    as the entire set of transformations to RDD have to be recomputed
 * if you reuse a dataframe for different analyses, it is a good idea to cache it
     * steps are executed each time you run an analytics pipeline
     * example: DataFrames commonly used during iterative machine learning training
 * caching vs persistence
     * persist() provides more control over how and where data is stored
         * DISK_ONLY, OFF_HEAP, etc.
-    * when you use cache() or persist(), the DataFrame is not fully cached until you invoke
-      an action that goes through every record
-        * partitions cannot be fractionally cached (e.g., if you have 8 partitions but only 4.5
-          partitions can fit in memory, only 4 will be cached)
-* vs checkpointing
-    * checkpoint() method will truncate the DAG (or logical plan) and save the content of the
-      dataframe to disk
+    * both are lazy transformations
+        * immediately after calling the function nothing happens with the data
+        but the query plan is updated by the Cache Manager by adding a
+        new operator — InMemoryRelation
+* caching vs checkpointing
+    * whatever is the case of failure, re-calculating the lost partitions is the most expensive operation
+        * best strategy is to start from some checkpoint in case of failure
+    * checkpoint() method will truncate the logical plan (DAG) and save the content of the dataframe to disk
+        * re-computations need not be done all the way from beginning, instead the checkpoint is used
+        as the beginning of re-calculation
     * cache will be cleaned when the session ends
         * checkpoints will stay on disk
-* note that a lot of the issues can come from key skewing: the data is so fragmented among
-  partitions that a join operation becomes very long
-    * solution: coalesce(), repartition(), or repartitionByRange()
+    * example where checkpointing would be preferred over caching
+        * DataFrame of taxes for a previous year - they are unlikely to change once calculated so
+        it would be much better to checkpoint and save them forever so that they can be consistently
+        reused in the future
+
 ### user-defined functions
 ```
 val cubed = (s: Long) => { s * s * s } // define function

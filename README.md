@@ -32,6 +32,9 @@
     * https://towardsdatascience.com/best-practices-for-caching-in-spark-sql-b22fb0f02d34
     * https://medium.com/@adrianchang/apache-spark-checkpointing-ebd2ec065371
     * http://www.lifeisafile.com/Apache-Spark-Caching-Vs-Checkpointing/
+    * https://stackoverflow.com/questions/24696777/what-is-the-relationship-between-workers-worker-instances-and-executors
+    * https://www.tutorialkart.com/apache-spark/cluster-managers-supported-in-apache-spark/
+    * https://www.informit.com/articles/article.aspx?p=2928186
 
 ## preface
 * goals of this workshop:
@@ -74,27 +77,28 @@
         * instantiates SparkSession
         * communicates with the cluster manager
         * requests resources (CPU, memory, etc.) from the cluster manager for Spark’s executors (JVMs)
-        * transforms operations into directed acyclic graph (DAG) computations and schedules them
+        * plans and coordinates the execution: transforms operations into directed acyclic graph (DAG)
+        and schedules them
+            * keeps track of available resources to execute tasks
+            * schedules tasks to run "close" to the data where possible (data locality)
         * distributes operations execution across the Spark executors
         * once the resources are allocated, it communicates directly with the executors
         * resides on master node
-    * Cluster manager
-        * manages and allocates resources for the cluster
-        * four types
-            * the built-in standalone cluster manager
-            * Apache Hadoop YARN
-            * Apache Mesos
-            * Kubernetes
-                * Spark driver: Runs in a Kubernetes pod
-                * Spark executor: Each worker runs within its own pod
-                * Cluster manager: Kubernetes Master
+    * Spark master & Cluster manager
+        * Cluster Manager can be separate from the Master process
+        * Spark master requests resources and makes resources available to the Driver
+            * monitors the status and health of resources
+            * is not involved in the execution of the application and the coordination of its tasks and stages
+        * Cluster manager is a process responsible for monitoring the Worker nodes and reserving resources
+        on these nodes upon request by the Master
+            * Master then makes these cluster resources available to the Driver in the form of Executors
     * Worker node
         * any node that can run application code in the cluster
         * may not share filesystems with one another
     * Spark executor
-        * single executor per each node
+        * is a process that executes tasks on the workers often in parallel
         * communicates with the driver program
-        * executes tasks on the workers
+        * workers hold many executors, for many application
     * Job
         * is a sequence of Stages, triggered by an action (ex. `.count()`)
     * Stage
@@ -125,6 +129,10 @@
                 * 4 cores and 5 partitions
                 * processing of each partition takes 5 minutes
                 * total time: 10 minutes (4 in parallel in 5 minutes, then 1 in 5 minutes)
+    * deployment on Kubernetes
+        * Spark driver: Runs in a Kubernetes pod
+        * Spark executor: Each worker runs within its own pod
+        * Cluster manager: Kubernetes Master
 
 ## data representation
 * RDD (Resilient Distributed Datasets)

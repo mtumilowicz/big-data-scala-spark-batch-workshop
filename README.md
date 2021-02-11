@@ -224,6 +224,7 @@
                 * allows to optimize queries (rearrange certain transformations, coalesce them, etc.)
                 * provides fault tolerance: reproduce its state by replaying the lineage
         * two types
+
             ![alt text](img/narrow_vs_wide.png)
     
 ### aggregations

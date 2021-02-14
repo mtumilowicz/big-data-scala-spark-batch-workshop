@@ -52,13 +52,13 @@
     * stream processing (Structured Streaming) based on micro-batch processing engine
     * graph processing (GraphX)
 * typical Spark scenario
-    1 Ingestion of raw data
-    1 DQ: data quality
+    1. Ingestion of raw data
+    1. DQ: data quality
         * example: ensure that all birth dates are in the past
         * example: obfuscate Social Security numbers (SSNs)
-    1 Transformation
+    1. Transformation
         * example: join with other datasets, perform aggregations
-    1 Publication
+    1. Publication
         * example: load the data into a data warehouse, save in a file on S3
 # components overview
 * components and architecture

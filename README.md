@@ -71,7 +71,7 @@
             * writing to data lakes
             * accessing catalog metadata
             * issuing Spark SQL queries
-        * there is a unique SparkSession for your application, not matter how many nodes it runs
+        * there is a unique SparkSession for your application, no matter how many nodes it runs
     * Spark driver
         * process running the `main()` function of the application
         * instantiates SparkSession
@@ -114,7 +114,7 @@
             * by having all the data needed to calculate on a single node, we reduce the
             overhead on the shuffle (the need for serialization and network traffic)
         * costly operation - a lot of data travels via the network
-        * example: join and any operation that ends with ByKey will trigger a Shuffle
+        * example: join
     * Partition
         * enable parallelization: data is split into Partitions so that each Executor can operate
         on a single part
@@ -140,7 +140,7 @@
     * immutable distributed collection of data
         * data itself is in partitions
 * Dataset and DataFrame
-    * take on two characteristics: DataFrame - typed and Dataset - untyped APIs
+    * take on two characteristics: DataFrame - untyped and Dataset - typed
     * Dataset is a collection of strongly typed JVM objects
         * has also an untyped view called a DataFrame, which is a Dataset of Row
             * Row is a generic untyped JVM object that may hold different types of fields
